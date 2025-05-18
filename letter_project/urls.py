@@ -25,7 +25,7 @@ urlpatterns = [
     path("letters/", include("letters.urls")),
     path("routines/", include("routines.urls")),
     path("accounts/", include("accounts.urls")),
-    path("profiles/", include("profiles.urls")),
+    path("user/", include("user.urls")),
     path("recommendations/", include("recommendations.urls")),
   
 ]

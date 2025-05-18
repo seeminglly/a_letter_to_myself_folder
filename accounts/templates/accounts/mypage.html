@@ -56,7 +56,7 @@
                 <p class="bio">한줄소개: {{ profile.bio }}</p>
                 <p class="birthday">생일: {{ profile.birthday }}</p>
                 <p class="blog-url">블로그: <a href="{{ profile.blog_url }}" target="_blank">{{ profile.blog_url }}</a></p>
-                <a href="{% url 'profiles:update_profile' %}" class="btn profile-edit-btn">프로필 수정</a>
+                <a href="{% url 'user:update_profile' %}" class="btn profile-edit-btn">프로필 수정</a>
             </div>
         </div>
         <!-- <div style="position: absolute; bottom: 20px; right: 20px; z-index: 1000;">

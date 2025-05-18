@@ -1,6 +1,6 @@
 import json
 from recommendations.views import split_recommendations
-from profiles.models import Profile, UserProfile
+from user.models import Profile, UserProfile
 from django.shortcuts import render,get_object_or_404
 import requests
 # Create your views here.

@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'routines',
     'recommendations',
     'emotions',
-    'profiles',  
+    'user',  
     'commons',
 ]
 
@@ -85,7 +85,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': 'sksk0877',
+        'PASSWORD': '본인 데베 비밀번호',
         'HOST': 'localhost',
         'PORT': '5432',
     }

@@ -29,7 +29,8 @@ def write_letter(request):
             letter.category = 'future' # 기본적으로 미래 카테고리로 분류
             letter.save()
             analyze_emotion_for_letter(letter)
-            return redirect('letter_list')  # 편지 목록 페이지로 이동
+            return redirect('letters:letter_list')  # 편지 목록 페이지로 이동
+            #네임스페이스 letters:를 꼭 붙여줘야 Django가 letter_list 뷰를 찾을 수 있음
     else:
         form = LetterForm()
         

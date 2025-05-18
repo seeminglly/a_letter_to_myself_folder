@@ -2,7 +2,7 @@
 
 from django import forms
 from django.contrib.auth.models import User
-from profiles.models import Profile,UserProfile
+from user.models import Profile,UserProfile
 
 
 class UserForm(forms.ModelForm):
