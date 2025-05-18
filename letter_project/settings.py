@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'letters',
-    'routines',
+    'schedule.routine_service',
     'recommendations',
     'emotions',
     'user',  
@@ -61,7 +61,9 @@ ROOT_URLCONF = 'letter_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'schedule', 'templates'),
+            ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -85,7 +87,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': '본인 데베 비밀번호',
+        'PASSWORD': 'sksk0877',
         'HOST': 'localhost',
         'PORT': '5432',
     }

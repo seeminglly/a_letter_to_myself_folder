@@ -1,20 +1,17 @@
-from django.shortcuts import render,get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from .models import LetterRoutine, SpecialDateRoutine
-from django.utils.timezone import now  # 현재 날짜 가져오기
+from django.utils.timezone import now
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 
-
-# Create your views here.
-#편지 루틴 만들기
 @login_required(login_url='commons:login')
 @csrf_exempt
 def save_routine(request):
     days = range(1, 32)
-    routine = None  # ✅ 기본값 설정
-    special_routine = None  # ✅ 기본값 설정
+    routine = None
+    special_routine = None
 
     if "title" in request.POST:
         title = request.POST.get("title") or "기본 루틴 제목"
@@ -42,7 +39,6 @@ def save_routine(request):
             date=date
         )
 
-    # ✅ 내 루틴 보기
     routines = LetterRoutine.objects.filter(user=request.user)
     specialDays = SpecialDateRoutine.objects.filter(user=request.user)
 
@@ -50,22 +46,20 @@ def save_routine(request):
         "days": days,
         "routines": routines,
         "specialDays": specialDays,
-        "routine_id": routine.id if routine else None,  # ✅ `None` 체크 추가
-        "special_routine_id": special_routine.id if special_routine else None  # ✅ `None` 체크 추가
+        "routine_id": routine.id if routine else None,
+        "special_routine_id": special_routine.id if special_routine else None
     }
 
     return render(request, "routines/routine.html", lists)
 
 
-
-
-
 WEEKDAYS = {
-    "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4, "Saturday": 5, "Sunday": 6
+    "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
+    "Friday": 4, "Saturday": 5, "Sunday": 6
 }
+
 @login_required
 def get_routine_events(request):
-    """ 사용자의 편지 루틴을 JSON 데이터로 반환 """
     user = request.user
     routines = LetterRoutine.objects.filter(user=user)
     special_dates = SpecialDateRoutine.objects.filter(user=user)
@@ -73,9 +67,7 @@ def get_routine_events(request):
     today = datetime.today().date()
     events = []
 
-    # 루틴 처리
     for routine in routines:
-        # 주간 루틴
         if routine.routine_type == "weekly":
             weekday = routine.day_of_week
             if weekday:
@@ -87,9 +79,7 @@ def get_routine_events(request):
                         "title": routine.title,
                         "start": (next_date + timedelta(weeks=i)).strftime("%Y-%m-%d"),
                         "allDay": True
-                    }) 
-
-        # 월간 루틴
+                    })
         elif routine.routine_type == "monthly":
             for month in range(1, 13):
                 try:
@@ -102,7 +92,6 @@ def get_routine_events(request):
                 except:
                     continue
 
-    # 🎉 기념일(SpecialDateRoutine) 처리
     for special in special_dates:
         events.append({
             "title": f"🎉 {special.name}",
@@ -113,6 +102,7 @@ def get_routine_events(request):
 
     return JsonResponse(events, safe=False)
 
+
 def delete_routine(request, pk):
     try:
         routine = get_object_or_404(LetterRoutine, pk=pk, user=request.user)
@@ -120,4 +110,3 @@ def delete_routine(request, pk):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
-

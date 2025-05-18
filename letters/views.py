@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.shortcuts import render, redirect,get_object_or_404
 from django.http import JsonResponse
-from routines.models import LetterRoutine, SpecialDateRoutine 
+# ✅ 수정
+from schedule.routine_service.models import LetterRoutine, SpecialDateRoutine
 from emotions.utils import analyze_emotion_for_letter
 from .models import Letters
 from .forms import LetterForm

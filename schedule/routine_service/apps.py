@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class RoutinesConfig(AppConfig):
+class RoutineServiceConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'routines'
+    name = 'schedule.routine_service'
