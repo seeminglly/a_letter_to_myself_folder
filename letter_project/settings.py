@@ -63,6 +63,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'schedule', 'templates'),
+            os.path.join(BASE_DIR, 'web-client', 'templates'),
             ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -87,7 +88,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': 'sksk0877',
+        'PASSWORD': '본인 데베 비번',
         'HOST': 'localhost',
         'PORT': '5432',
     }
