@@ -26,5 +26,7 @@ urlpatterns = [
     path("accounts/", include("accounts.urls")),
     path("user/", include("user.urls")),
     #path("recommendations/", include("recommendations.urls")),
-    path("api/recommendations/", include("emotion_recommendation.recommendation.emotion_based.urls")),
+    path("api/recommendations/", include(("emotion_recommendation.recommendation.urls", "recommendations"), namespace="recommendations")),
+
+
 ]

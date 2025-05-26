@@ -167,11 +167,17 @@ def mypage(request):
     most_frequent_detailed_mood = None  # ✅ 기본값 설정
 
     # 🔗 내부 API 통합 호출
-    BASE_URL = "http://127.0.0.1:8000/commons"  # 배포 시 도메인으로 변경
+    # BASE_URL = "http://127.0.0.1:8000/commons"  # 배포 시 도메인으로 변경
+    BASE_URL = "http://127.0.0.1:8000/emotion"
     try:
+        # response = requests.get(
+        #     f"{BASE_URL}/api/user/emotion-summary/",
+        #     cookies=request.COOKIES  # 세션 인증 유지
+        # )
+        
         response = requests.get(
-            f"{BASE_URL}/api/user/emotion-summary/",
-            cookies=request.COOKIES  # 세션 인증 유지
+            f"{BASE_URL}/summary/",
+            cookies=request.COOKIES
         )
         if response.status_code == 200:
             data = response.json()

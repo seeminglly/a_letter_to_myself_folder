@@ -4,7 +4,12 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 
-from recommendation.feedback.models import Feedback
+#마이크로
+#from recommendation.feedback.models import Feedback
+
+#모놀리식
+from emotion_recommendation.recommendation.feedback.models import Feedback
+
 
 
 
