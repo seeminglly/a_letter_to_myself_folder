@@ -1,37 +1,68 @@
-from django.shortcuts import render
-from django.shortcuts import render, redirect
-from .forms import ProfileForm, ProfilePictureForm
-from .models import Profile, UserProfile
-from django.contrib.auth.decorators import login_required
-# Create your views here.
-@login_required
-def update_profile(request):
-    user_profile = UserProfile.objects.get(user=request.user)
-    profile = Profile.objects.get(user=request.user)
-    
-    if request.method == 'POST':
-        profile_form = ProfileForm(request.POST, instance=profile)
-        picture_form = ProfilePictureForm(request.POST, request.FILES, instance=user_profile)
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from accounts.models import User
+from .models import UserProfile
+from .serializers import *
+from .services import verify_access_token
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes
 
-        if profile_form.is_valid() and picture_form.is_valid():
-            profile = profile_form.save(commit=False)  # ✅ 수정 전 저장 중지
-            profile.user = request.user                # ✅ 필요한 경우 수동 연결
-            profile.save()                             # ✅ 수동 저장
 
-            picture_form.save()
-            return redirect('commons:mypage')
+class UserProfileGetView(APIView):
+    def get(self, request):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return Response({'detail': 'Authorization header missing or malformed'}, status=401)
+        token = auth_header.split(' ')[1]
 
+        try:
+            user_id = verify_access_token(token)
+            profile = UserProfile.objects.get(user_id=user_id)
+            serializer = UserProfileSerializer(profile)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=400)
+
+
+class UserProfileUpdateView(APIView):
+    def patch(self, request):
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return Response({'detail': 'Authorization header missing or malformed'}, status=401)
+        token = auth_header.split(' ')[1]
+
+        try:
+            user_id = verify_access_token(token)
+        except Exception as e:
+            return Response({'detail': str(e)}, status=401)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'User not found'}, status=404)
+
+        serializer = UserProfileUpdateSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(UserProfileSerializer(user).data)
         else:
-            print(profile_form.errors)  # 오류 출력
-            print(picture_form.errors)
-    else:
-        profile_form = ProfileForm(instance=profile)
-        picture_form = ProfilePictureForm(instance=user_profile)
+            return Response(serializer.errors, status=400)
 
-    context = {
-        'profile_form': profile_form,
-        'picture_form': picture_form,
-        'profile': profile,
-        'user_profile': user_profile
-    }
-    return render(request, 'commons/update_profile.html', context)
+
+class UserCreateInternalView(APIView):
+    def post(self, request):
+        serializer = UserCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({"user_id": user.id}, status=201)
+
+class UserRetrieveInternalView(APIView):
+    def get(self, request, user_id):
+        try:
+            profile = UserProfile.objects.get(user_id=user_id)
+            serializer = UserProfileSerializer(profile)
+            return Response(serializer.data)
+        except UserProfile.DoesNotExist:
+            return Response({"detail": "User not found"}, status=404)
+
