@@ -49,6 +49,21 @@
         }  */
         
 
+        /* 삭제 버튼 스타일 */
+        .delete-letter-btn {
+            margin-left: 10px;
+            padding: 3px 8px;
+            font-size: 0.8em;
+            color: white;
+            background-color: #dc3545; /* 부트스트랩 danger 색상 유사 */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .delete-letter-btn:hover {
+            background-color: #c82333;
+        }
+
       
     </style>
 </head>
@@ -109,6 +124,7 @@
                         {% if letter.category == 'past' %}
                         <li class="modalList" data-id="{{ letter.id }}" style="list-style-type: none;">
                             - {{ letter.title }}
+                            <button type="button" class="delete-letter-btn" data-letter-id="{{ letter.id }}">삭제</button>
                         </li>
                         {% endif %}
                     {% endfor %}
@@ -121,7 +137,8 @@
                     {% for letter in letters %}
                         {% if letter.category == 'today' %}
                         <li class="modalList" data-id="{{ letter.id }}" style="list-style-type: none;">
-                            {{ letter.letter_date }} - {{ letter.title }}
+                                                    {{ letter.letter_date }} - {{ letter.title }}
+                        <button type="button" class="delete-letter-btn" data-letter-id="{{ letter.id }}">삭제</button>
                         </li>
                         {% endif %}
                     {% endfor %}

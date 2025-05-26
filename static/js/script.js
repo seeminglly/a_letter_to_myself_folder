@@ -114,3 +114,81 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    // CSRF 토큰을 쿠키에서 가져오는 함수 (Django의 기본 방식)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const deleteButtons = document.querySelectorAll('.delete-letter-btn');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            // 중요: 이 버튼이 .modalList (li) 내부에 있다면,
+            // li를 클릭했을 때 모달이 열리는 동작이 있을 수 있습니다.
+            // 삭제 버튼 클릭 시에는 모달 열림을 방지하기 위해 이벤트 전파를 중단합니다.
+            event.stopPropagation(); 
+
+            const letterId = this.dataset.letterId;
+            if (confirm('정말로 이 편지를 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.')) {
+                // CSRF 토큰 가져오기 (getCookie 함수 또는 페이지 내 input 태그에서)
+                const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+                if (!csrfToken) {
+                    alert('CSRF 토큰을 찾을 수 없습니다. 페이지를 새로고침하고 다시 시도해주세요.');
+                    console.error('CSRF token not found.');
+                    return;
+                }
+
+                fetch(`/letters/${letterId}/delete/`, { // ✅ API URL이 정확한지 확인하세요.
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json' // 서버가 JSON 응답을 보내도록 요청
+                    }
+                })
+                .then(response => {
+                    if (response.status === 200) { // No Content 성공 (서버에서 내용 없이 성공 응답)
+                        return { status: 'success', message: '편지가 성공적으로 삭제되었습니다.' };
+                    }
+                    // 그 외 경우, JSON 응답을 파싱 시도
+                    return response.json().then(data => {
+                        if (!response.ok) {
+                            // 서버에서 에러 응답 (4xx, 5xx)을 보냈고, JSON 본문이 있는 경우
+                            throw new Error(data.message || `서버 오류: ${response.status}`);
+                        }
+                        return data; // 성공적인 JSON 응답 (예: {status: 'success', message: '...'})
+                    });
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
+                        // 성공 시 페이지 새로고침 또는 해당 편지 항목 DOM에서 제거
+                        // 예: this.closest('li').remove(); // 버튼의 가장 가까운 li 요소를 제거 (동적 처리)
+                        window.location.reload(); // 간단하게 페이지 전체 새로고침
+                    } else {
+                        // data.status가 'error'이거나, 예상치 못한 성공 응답 형식일 경우
+                        alert('오류: ' + (data.message || '알 수 없는 오류가 발생했습니다.'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('편지 삭제 중 오류가 발생했습니다: ' + error.message);
+                });
+            }
+        });
+    });
+});

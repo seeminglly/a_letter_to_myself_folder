@@ -15,6 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from datetime import datetime, timedelta
 import openai
 import os
@@ -100,3 +101,34 @@ def letter_json(request, letter_id):
     }
 
     return JsonResponse(data)
+
+
+# 4️⃣ 편지 삭제 API (내부 API)
+# @csrf_exempt # 실제 API로 분리 시 CSRF 처리 방식 변경 필요 (예: Token Authentication)
+@login_required # API도 로그인 필요
+@require_http_methods(["DELETE"]) # DELETE 요청만 허용
+def delete_letter_api_internal(request, letter_id):
+    try:
+        # 본인이 작성한 편지만 삭제 가능하도록 user 조건 추가
+        letter = get_object_or_404(Letters, id=letter_id, user=request.user)
+
+        # GCS에서 이미지 파일 삭제 (이미지가 있는 경우)
+        if letter.image_url:
+            blob_name = storage.extract_blob_name_from_image_url(letter.image_url, settings.BUCKET_NAME)
+            if blob_name:
+                try:
+                    storage.delete_image_from_gcs(blob_name, settings.BUCKET_NAME)
+                except Exception as e:
+                    # GCS 삭제 실패 시 로깅 등 예외 처리 (편지 DB 삭제는 계속 진행될 수 있도록)
+                    print(f"Error deleting image from GCS: {e}") # 실제 운영에서는 로깅 사용
+
+        letter.delete()
+
+        return JsonResponse({'status': 'success', 'message': '편지가 성공적으로 삭제되었습니다.'}, status=200)
+    
+    except Letters.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': '해당 편지를 찾을 수 없습니다.'}, status=404)
+    except Exception as e:
+        # 기타 예외 처리
+        print(f"Error deleting letter: {e}") # 실제 운영에서는 로깅 사용
+        return JsonResponse({'status': 'error', 'message': '편지 삭제 중 오류가 발생했습니다.'}, status=500)

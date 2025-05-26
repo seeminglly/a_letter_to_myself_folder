@@ -27,7 +27,7 @@ urlpatterns = [
     path('writing/', views.write_letter, name="writing"),
     path('letters/', views.letter_list, name='letter_list'),  # 작성한 편지 목록
     path('<int:letter_id>/', views.letter_json, name="letter_json"),
-     
+    path('<int:letter_id>/delete/', views.delete_letter_api_internal, name='delete_letter_api_internal'), # 편지 삭제 API 엔드포인트 (내부 API)
    
 ] 
 # 개발 중일 때만 미디어 파일 서빙
