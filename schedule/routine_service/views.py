@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 
-@login_required(login_url='commons:login')
+@login_required(login_url='login')
 @csrf_exempt
 def save_routine(request):
     days = range(1, 32)

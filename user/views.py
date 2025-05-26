@@ -19,7 +19,7 @@ def update_profile(request):
             profile.save()                             # ✅ 수동 저장
 
             picture_form.save()
-            return redirect('commons:mypage')
+            return redirect('mypage')
 
         else:
             print(profile_form.errors)  # 오류 출력

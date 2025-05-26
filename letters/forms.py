@@ -3,9 +3,11 @@ from .models import Letters
 
 
 class LetterForm(forms.ModelForm):
+    image = forms.ImageField(required=False)
+    
     class Meta:
         model = Letters
-        fields = ['title','content', 'image','open_date']  # 사용자 입력 필드
+        fields = ['title','content', 'open_date']  # 사용자 입력 필드
 
         widgets = {
             'content': forms.Textarea(attrs={'class':'form-control', 'style':'width: 350px; height:440px'}),

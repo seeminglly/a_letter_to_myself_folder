@@ -26,6 +26,7 @@ app_name = "letters"
 urlpatterns = [
     path('writing/', views.write_letter, name="writing"),
     path('letters/', views.letter_list, name='letter_list'),  # 작성한 편지 목록
+    path('<int:letter_id>/', views.letter_json, name="letter_json"),
      
    
 ] 

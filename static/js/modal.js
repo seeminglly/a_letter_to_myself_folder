@@ -60,7 +60,7 @@ function openLetter(letterId) {
 
         console.log("✅ Fetching letter with ID:", letterId);
 
-        fetch(`/api/letters/${letterId}/`)
+        fetch(`/letters/${letterId}/`)
             .then(response => response.json())
             .then(letter => {
                 console.log("✅ 받은 데이터:", letter);  // 🔥 JSON 데이터 콘솔 출력
@@ -68,6 +68,7 @@ function openLetter(letterId) {
                 document.getElementById("modalTitle").textContent = letter.title;
                 document.getElementById("modalDate").textContent = "📅 " + letter.letter_date;
                 document.getElementById("modalContent").textContent = letter.content;
+                document.getElementById("modalImageUrl").src = letter.image_url || '';
 
                 // ✅ 모달창 표시 확인
                 let overlay = document.getElementById("modalOverlay");

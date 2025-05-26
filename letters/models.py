@@ -49,13 +49,14 @@ def get_default_user():
     if not user:
         raise ImproperlyConfigured("기본 사용자(User)가 존재하지 않습니다. 최소 1명의 유저를 만들어주세요.")
     return user.id
+
 # Create your models here.
 class Letters(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,default=get_default_user, related_name="letters") 
     id = models.AutoField(primary_key=True)  # 기본 키 설정
     title = models.CharField(max_length=200)  # 편지 제목
     content = models.TextField()  # 편지 내용
-    image = models.ImageField(null=True, blank=True)
+    image_url = models.URLField(null=True, blank=True) # 이미지 url 저장(gcs 연동동)
     created_at = models.DateTimeField(auto_now_add=True)  # 작성 시간
     open_date = models.DateField()  # 편지를 열 수 있는 날짜 (선택)
     category = models.CharField(max_length=20,
@@ -81,4 +82,3 @@ class Letters(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.category}"
-    

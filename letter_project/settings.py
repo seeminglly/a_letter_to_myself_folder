@@ -10,17 +10,34 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+
 from pathlib import Path
 import os
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+import sys
+
+from dotenv import load_dotenv
+
+# BASE_DIR 설정
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# 하위 서비스 폴더들(emotion_analysis 등)이 패키지로 인식되도록 sys.path에 루트(BASE_DIR)를 추가함
+# 안 해주면 모놀리식 실행 시 'No module named emotions' 같은 import 에러 뜸 
+sys.path.append(str(BASE_DIR))
+
+# .env 파일 로드
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG') == 'True'
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# gcp 버킷 환경변수 설정
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.join(BASE_DIR, 'gcs-key.json')
+BUCKET_NAME = os.getenv('BUCKET_NAME')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x5pvgjw+=nbwg@aeuv37iz=i6@gzl%)(=l80v%v#to$my(whjl'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,12 +55,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
-    'letters',
+    'letters.apps.LettersConfig',
     'schedule.routine_service',
-    'recommendations',
-    'emotions',
+    'emotion_analysis.emotions',  # 감정 분석 앱
+    'emotion_recommendation.recommendation.emotion_based',  # 추천 알고리즘 앱
+    'emotion_recommendation.recommendation.feedback',
     'user',  
-    'commons',
 ]
 
 MIDDLEWARE = [
@@ -88,7 +105,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': '본인 데베 비번',
+        'PASSWORD': '비밀번호',
         'HOST': 'localhost',
         'PORT': '5432',
     }

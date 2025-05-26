@@ -1,5 +1,14 @@
 from django import forms
-from .models import UserProfile, Profile
+from user.models import Profile,UserProfile
+from django.contrib.auth.models import User #UserForm에서 model = User 가 인식
+
+class UserForm(forms.ModelForm): #회원가입 폼에 사용
+    password = forms.CharField(widget=forms.PasswordInput)
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+
 
 class ProfileForm(forms.ModelForm): # 프로필 수정 필드 추가
     password = None

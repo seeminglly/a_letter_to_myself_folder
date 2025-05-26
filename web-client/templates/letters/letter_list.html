@@ -84,12 +84,13 @@
     <div id="modalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);" onclick="closeModal()"></div>
 
     <!-- 모달창 -->
-    <div id="letterModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; padding: 20px; background: white; border-radius: 10px; box-shadow: 0px 5px 10px rgba(0,0,0,0.3);">
-        <div id="popup" style= "padding: 20px; border-radius: 10px;  font-family: 'KCC-Sonkeechung'";>
+    <div id="letterModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; margin: 20px; background: white; border-radius: 10px; box-shadow: 0px 5px 10px rgba(0,0,0,0.3);">
+        <div id="popup" style= "position: relative; padding: 20px; border-radius: 10px;  font-family: 'KCC-Sonkeechung'";>
             <h2 id="modalTitle"></h2>
             <p id="modalDate"></p>
             <p id="modalContent"></p>
-            <button onclick="closeModal()">닫기</button>
+            <img id="modalImageUrl" alt="편지 이미지" style="display: block; width: 300px; height: auto; margin: 0 auto" />
+            <button onclick="closeModal()" style="margin: 20px 0">닫기</button>
         </div>
     </div>
     

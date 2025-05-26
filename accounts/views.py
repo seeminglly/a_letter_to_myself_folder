@@ -1,5 +1,5 @@
 import json
-from recommendations.views import split_recommendations
+from emotion_recommendation.recommendation.emotion_based.views import split_recommendations
 from user.models import Profile, UserProfile
 from django.shortcuts import render,get_object_or_404
 import requests
@@ -10,7 +10,7 @@ import openai
 from django.contrib.auth import logout, authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
-from commons.forms import UserForm
+from user.forms import UserForm
 
 from django.shortcuts import render
 from collections import Counter
@@ -21,7 +21,9 @@ from dotenv import load_dotenv
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
-from emotions.utils import analyze_emotion_for_letter
+#from emotions.utils import analyze_emotion_for_letter -> 서비스 따로 돌릴 때 경로
+#모놀리식으로 실행시킬 때 경로
+from emotion_analysis.emotions.utils import analyze_emotion_for_letter
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 import re  # 상단에 import 추가
@@ -75,8 +77,8 @@ def reanalyze_all_emotions(request):
     for letter in letters:
         analyze_emotion_for_letter(letter)
 
- # 분석이 끝난 후 마이페이지로 리디렉션
-    return redirect("commons:mypage")   
+# 분석이 끝난 후 마이페이지로 리디렉션
+    return redirect("mypage")   
 
 
 @api_view(["POST"])

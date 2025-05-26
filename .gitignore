@@ -14,8 +14,14 @@ env/
 # 환경변수
 .env
 
-# Django static files (선택)
-staticfiles/
+*.log
 
 # media 파일
 media/
+staticfiles/
+.vscode/
+.idea/
+
+# GCP 버킷 key
+gcs-key.json
+>>>>>>> origin/main
