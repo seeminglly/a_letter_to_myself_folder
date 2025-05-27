@@ -23,10 +23,14 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        fields = ['id', 'username', 'email', 'name', 'bio']
+        fields = [
+            'id', 'username', 'email',
+            'profile_picture', 'nickname', 'bio',
+            'birthday', 'blog_url',
+        ]
 
 
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = ['name', 'bio']
+        fields = ['profile_picture', 'nickname', 'bio', 'birthday', 'blog_url']

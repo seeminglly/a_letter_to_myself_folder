@@ -7,7 +7,7 @@ from .serializers import *
 from .services import verify_access_token
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
-
+import requests
 
 class UserProfileGetView(APIView):
     def get(self, request):

@@ -1,6 +1,8 @@
 from django.urls import path
 from .views import UserProfileGetView, UserProfileUpdateView, UserCreateInternalView, UserRetrieveInternalView
 
+app_name = "profiles"
+
 urlpatterns = [
     # 클라이언트 API
     path('profile/get/', UserProfileGetView.as_view(), name='get_profile'),

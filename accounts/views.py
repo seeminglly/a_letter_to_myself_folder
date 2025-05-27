@@ -1,62 +1,94 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from django.contrib.auth.hashers import make_password, check_password
-from .serializers import *
+from django.views import View
+from .forms import SignupForm, LoginForm
 from .jwt_utils import *
 from .services import create_user_in_user_service
 from .models import User
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
-
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+import requests
 
 # 임시 메모리 저장소 (프로덕션에서는 Redis 등 사용)
 REFRESH_TOKEN_STORE = {}
 
 
-class SignupView(APIView):
+class SignupView(View):
+    def get(self, request):
+        form = SignupForm()
+        return render(request, "accounts/signup.html", {"form": form})
+
     def post(self, request):
-        serializer = SignupSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
-        password = serializer.validated_data['password']
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password1']
 
-        # Auth 서비스에 사용자 저장
-        if User.objects.filter(username=username).exists():
-            return Response({'detail': 'Username already exists'}, status=400)
-        user = User.objects.create_user(username=username, email=email, password=password)
+            if User.objects.filter(username=username).exists():
+                form.add_error('username', 'Username already exists')
+                return render(request, "accounts/signup.html", {"form": form})
 
-        # User 서비스에 프로필 저장 (비밀번호 제외)
-        user_id = create_user_in_user_service(username, email)
-        return Response({"user_id": user.id}, status=201)
+            user = User.objects.create_user(username=username, email=email, password=password)
+
+            try:
+                create_user_in_user_service(username, email)
+            except Exception as e:
+                user.delete()  # 롤백
+                form.add_error(None, 'Failed to create profile in user service')
+                return render(request, "accounts/signup.html", {"form": form})
+
+            return redirect("accounts:login")
+        return render(request, "accounts/signup.html", {"form": form})
 
 
-class LoginView(APIView):
+class LoginView(View):
+    def get(self, request):
+        form = LoginForm()
+        return render(request, "accounts/login.html", {"form": form})
+
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data['username']
-        password = serializer.validated_data['password']
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
 
-        user = authenticate(request, username=username, password=password)
-        if user is None:
-            return Response({'detail': 'Invalid credentials'}, status=401)
+            if user is not None:
+                access = create_access_token(user.id)
+                refresh = create_refresh_token(user.id)
+                REFRESH_TOKEN_STORE[refresh] = user.id
 
-        access = create_access_token(user.id)
-        refresh = create_refresh_token(user.id)
-        REFRESH_TOKEN_STORE[refresh] = user.id
-        return Response({'access': access, 'refresh': refresh})
+                login(request, user)
+
+                response = redirect("commons:home")  # 성공시 리디렉션
+                response.set_cookie("access", access, httponly=True, samesite='Lax')
+                response.set_cookie("refresh", refresh, httponly=True, samesite='Lax')
+                return response
+            else:
+                return render(request, "accounts/login.html", {
+                    "form": form,
+                    "error": "Invalid credentials"
+                })
+        return render(request, "accounts/login.html", {"form": form})
 
 
-class LogoutView(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request):
-        refresh = request.data.get('refresh')
+class LogoutView(View):
+    def get(self, request):
+        refresh = request.COOKIES.get("refresh")
         if refresh in REFRESH_TOKEN_STORE:
             del REFRESH_TOKEN_STORE[refresh]
-        return Response(status=204)
+
+        logout(request)
+        response = redirect("commons:home")
+        response.delete_cookie("access")
+        response.delete_cookie("refresh")
+        return response
 
 
 class TokenRefreshView(APIView):
@@ -88,3 +120,37 @@ class TokenVerifyInternalView(APIView):
             return Response({'detail': 'Token expired'}, status=401)
         except InvalidTokenError:
             return Response({'detail': 'Invalid token'}, status=401)
+
+
+
+class MypageView(APIView):
+    def get(self, request):
+        access_token = request.COOKIES.get('access')
+        if not access_token:
+            return redirect('accounts:login')
+
+        headers = {'Authorization': f'Bearer {access_token}'}
+        try:
+            response = requests.get("http://localhost:8000/profiles/profile/get/", headers=headers)
+            if response.status_code == 200:
+                profile_data = response.json()
+                context = {
+                    "user": {
+                        "username": profile_data.get("username"),
+                        "email": profile_data.get("email"),
+                    },
+                    "user_profile": {
+                        "profile_picture": {"url": "/static/images/basicprofile.png"},  # 임시 기본 이미지 처리
+                    },
+                    "profile": {
+                        "nickname": profile_data.get("name", ""),
+                        "bio": profile_data.get("bio", ""),
+                        "birthday": "",  # 임시공백
+                        "blog_url": "",  # 임시공백
+                    }
+                }
+                return render(request, "accounts/mypage.html", context)
+            else:
+                return render(request, "accounts/mypage.html", {"error": "프로필 정보를 불러올 수 없습니다."})
+        except Exception as e:
+            return render(request, "accounts/mypage.html", {"error": str(e)})
