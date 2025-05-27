@@ -1,226 +1,181 @@
 import json
 from emotion_recommendation.recommendation.emotion_based.views import split_recommendations
-from user.models import Profile, UserProfile
+from user.models import UserProfile
 from django.shortcuts import render,get_object_or_404
 import requests
 # Create your views here.
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 import openai
 from django.contrib.auth import logout, authenticate, login
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
-from user.forms import UserForm
-
+from django.shortcuts import redirect, render
+from django.contrib.auth.hashers import make_password, check_password
+from django.views import View
+from user.forms import UserForm # 있어야되는지?
+from .forms import SignupForm, LoginForm
 from django.shortcuts import render
 from collections import Counter
-
 from letters.models import Letters  
 import os
 from dotenv import load_dotenv
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.response import Response
+from .jwt_utils import *
+from .services import create_user_in_user_service
 #from emotions.utils import analyze_emotion_for_letter -> 서비스 따로 돌릴 때 경로
 #모놀리식으로 실행시킬 때 경로
 from emotion_analysis.emotions.utils import analyze_emotion_for_letter
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-import re  # 상단에 import 추가
+from .models import User
+import requests
+
+# 임시 메모리 저장소 (프로덕션에서는 Redis 등 사용)
+REFRESH_TOKEN_STORE = {}
 
 
-# 사용자 관리
-# Create your views here.
-@csrf_exempt
-def login_view(request):
-    if request.method == "POST":
-        username = request.POST.get('username')
-        password = request.POST.get('password')
 
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('/')
-        else:
-            return render(request, 'accounts/login.html', {'error': '아이디 또는 비밀번호가 틀렸습니다.'})
-    
-    return render(request, 'accounts/login.html')
 
-def logout_view(request):
-    logout(request)
-    return redirect('/')
+class SignupView(View):
+    def get(self, request):
+        form = SignupForm()
+        return render(request, "accounts/signup.html", {"form": form})
 
-def signup(request):
-    if request.method == 'POST':
-        form = UserForm(request.POST)
+    def post(self, request):
+        form = SignupForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            Profile.objects.create(user=user)
-            UserProfile.objects.get_or_create(user=user)
-            login(request, user)
-            return redirect('/')
-        else:
-            return render(request, 'accounts/signup.html', {'form': form})
-    else:
-        form = UserForm()
+            username = form.cleaned_data['username']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password1']
 
-    return render(request, 'accounts/signup.html', {'form': form})
+            if User.objects.filter(username=username).exists():
+                form.add_error('username', 'Username already exists')
+                return render(request, "accounts/signup.html", {"form": form})
 
+            user = User.objects.create_user(username=username, email=email, password=password)
 
+            try:
+                create_user_in_user_service(username, email)
+            except Exception as e:
+                user.delete()  # 롤백
+                form.add_error(None, 'Failed to create profile in user service')
+                return render(request, "accounts/signup.html", {"form": form})
 
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def reanalyze_all_emotions(request):
-    user = request.user
-    letters = Letters.objects.filter(user=user)
-
-    for letter in letters:
-        analyze_emotion_for_letter(letter)
-
-# 분석이 끝난 후 마이페이지로 리디렉션
-    return redirect("mypage")   
+            return redirect("accounts:login")
+        return render(request, "accounts/signup.html", {"form": form})
 
 
-@api_view(["POST"])
-def generate_comforting_message(request):
-    """상위 감정(mood)에 맞는 위로의 말 생성"""
+class LoginView(View):
+    def get(self, request):
+        form = LoginForm()
+        return render(request, "accounts/login.html", {"form": form})
 
-    mood = request.data.get("mood") or request.data.get("emotion")   # '기쁨', '슬픔' 등
+    def post(self, request):
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
 
-    comfort_prompts = {
-        "기쁨": "당신의 행복한 순간을 함께 나눌 수 있어 기뻐요. 그 기쁨이 오래 지속되길 바라요!",
-        "슬픔": "슬픈 날에는 울어도 괜찮아요. 당신의 감정을 있는 그대로 받아들여 주세요. 저는 당신을 응원해요.",
-        "분노": "화나는 감정을 느끼는 건 당연해요. 잠시 숨을 고르고, 천천히 생각을 정리해봐요.",
-        "불안": "불안한 마음은 누구에게나 찾아와요. 당신은 잘 해내고 있어요. 천천히, 차분히 앞으로 나아가요.",
-        "사랑": "사랑하는 마음은 참 소중해요. 그 따뜻한 마음이 더 많은 사람에게 전해지기를 바라요.",
-        "중립": "감정이 특별히 떠오르지 않는 날도 있어요. 그런 날엔 그저 편안함 속에 머물러도 좋아요."
-    }
+            if user is not None:
+                access = create_access_token(user.id)
+                refresh = create_refresh_token(user.id)
+                REFRESH_TOKEN_STORE[refresh] = user.id
 
-    message = comfort_prompts.get(mood, "당신의 감정을 이해하고 싶어요. 편하게 이야기해 주세요.")
-    return Response({"comfort_message": message})
+                login(request, user)
+
+                response = redirect("home")  # 성공시 리디렉션
+                response.set_cookie("access", access, httponly=True, samesite='Lax')
+                response.set_cookie("refresh", refresh, httponly=True, samesite='Lax')
+                return response
+            else:
+                return render(request, "accounts/login.html", {
+                    "form": form,
+                    "error": "Invalid credentials"
+                })
+        return render(request, "accounts/login.html", {"form": form})
 
 
+class LogoutView(View):
+    def get(self, request):
+        refresh = request.COOKIES.get("refresh")
+        if refresh in REFRESH_TOKEN_STORE:
+            del REFRESH_TOKEN_STORE[refresh]
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def user_emotion_summary(request):
-    user = request.user
-    letters = Letters.objects.filter(user=user)
+        logout(request)
+        response = redirect("home")
+        response.delete_cookie("access")
+        response.delete_cookie("refresh")
+        return response
 
-    emotion_list = [letter.mood for letter in letters if letter.mood]
-    detailed_list = [letter.detailed_mood for letter in letters if letter.detailed_mood]  
 
-    from collections import Counter
-    emotion_counts = dict(Counter(emotion_list))
-    detailed_counts = dict(Counter(detailed_list))
+class TokenRefreshView(APIView):
+    def post(self, request):
+        serializer = TokenRefreshSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        refresh = serializer.validated_data['refresh']
+        try:
+            user_id = verify_token(refresh, token_type='refresh')
+            if REFRESH_TOKEN_STORE.get(refresh) != user_id:
+                return Response({'detail': 'Invalid refresh token'}, status=401)
+            access = create_access_token(user_id)
+            return Response({'access': access})
+        except ExpiredSignatureError:
+            return Response({'detail': 'Refresh token expired'}, status=401)
+        except InvalidTokenError:
+            return Response({'detail': 'Invalid refresh token'}, status=401)
 
-    most_frequent_mood = max(emotion_counts.items(), key=lambda x: x[1])[0] if emotion_counts else None
-    most_frequent_detailed_mood = max(detailed_counts.items(), key=lambda x: x[1])[0] if detailed_counts else None
 
-    BASE_URL = "http://127.0.0.1:8000/commons"
-    csrf_token = request.COOKIES.get('csrftoken')
-    headers = {
-        'X-CSRFToken': csrf_token,
-        'Content-Type': 'application/json'
-    }
-
-    # ✅ comfort_message 요청은 단 한 번, 예외도 전체 감싸기
-    try:
-        if most_frequent_mood:
-            msg_res = requests.post(
-                f"{BASE_URL}/api/emotions/message/",
-                headers=headers,
-                json={"mood": most_frequent_mood}
-            )
-            comfort_message = msg_res.json().get("comfort_message", "감정 기반 메시지를 찾을 수 없습니다.")
-        else:
-            comfort_message = "감정이 분석되지 않았습니다. 편지를 먼저 작성해보세요."
-    except Exception as e:
-        print("❌ comfort message 오류:", e)
-        comfort_message = "감정 기반 메세지를 불러올 수 없습니다."
-
-    # ✅ 추천 API 호출
-    try:
-        recommend_res = requests.post(
-            f"{BASE_URL}/api/recommendations/emotion-based/",
-            headers=headers,
-            cookies=request.COOKIES
-        )
-        recommendations = recommend_res.json().get("recommendations", "추천 결과를 찾을 수 없습니다.")
-    except Exception as e:
-        print("❌ 추천 오류:", e)
-        recommendations = "추천 결과를 불러올 수 없습니다."
-
-    return Response({
-        "emotions": emotion_counts,
-        "most_frequent_mood": most_frequent_mood,
-        "most_frequent_detailed_mood": most_frequent_detailed_mood,
-        "comfort_message": comfort_message,
-        "recommendations": recommendations,
-    })
+class TokenVerifyInternalView(APIView):
+    def post(self, request):
+        serializer = TokenVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        token = serializer.validated_data['token']
+        try:
+            user_id = verify_token(token)
+            return Response({'user_id': user_id})
+        except ExpiredSignatureError:
+            return Response({'detail': 'Token expired'}, status=401)
+        except InvalidTokenError:
+            return Response({'detail': 'Invalid token'}, status=401)
 
 
 
-@login_required
-def mypage(request):
-    user = request.user
-    most_frequent_detailed_mood = None  # ✅ 기본값 설정
+class MypageView(APIView):
+    def get(self, request):
+        access_token = request.COOKIES.get('access')
+        if not access_token:
+            return redirect('accounts:login')
 
-    # 🔗 내부 API 통합 호출
-    # BASE_URL = "http://127.0.0.1:8000/commons"  # 배포 시 도메인으로 변경
-    BASE_URL = "http://127.0.0.1:8000/emotion"
-    try:
-        # response = requests.get(
-        #     f"{BASE_URL}/api/user/emotion-summary/",
-        #     cookies=request.COOKIES  # 세션 인증 유지
-        # )
-        
-        response = requests.get(
-            f"{BASE_URL}/summary/",
-            cookies=request.COOKIES
-        )
-        if response.status_code == 200:
-            data = response.json()
-            emotions = data.get("emotions", {})
-            most_frequent_mood = data.get("most_frequent_mood")
-            most_frequent_detailed_mood = data.get("most_frequent_detailed_mood")  # ✅ 추가
-            comfort_message = data.get("comfort_message")
-            recommendations = data.get("recommendations")
-        else:
-            emotions = {}
-            most_frequent_mood = None
-            comfort_message = "감정 메시지를 불러오지 못했습니다."
-            recommendations = "추천 결과를 불러오지 못했습니다."
-    except Exception as e:
-        emotions = {}
-        most_frequent_mood = None
-        comfort_message = "감정 메시지를 불러오지 못했습니다."
-        recommendations = "추천 결과를 불러오지 못했습니다."
-    # 사용자 정보
-    profile, _ = Profile.objects.get_or_create(user=user)
-    user_profile, _ = UserProfile.objects.get_or_create(user=user)
-    letter_count = user.letters.count()
-    routine_count = user.routines.count()
-
-    movie_lines, music_lines = split_recommendations(recommendations)
-
-
-    context = {
-        "user": user,
-        "user_profile": user_profile,
-        "profile": profile,
-        "emotions": json.dumps(emotions),
-        "mood_counts": emotions,
-        "most_frequent_mood": most_frequent_mood,
-        "most_frequent_detailed_mood": most_frequent_detailed_mood,
-        "comfort_message": comfort_message,
-        "recommendations": recommendations,
-        "letter_count": letter_count,
-        "routine_count": routine_count,
-        "recommendation_lines": recommendations.splitlines() if recommendations else [],
-        "movie_lines": movie_lines,
-        "music_lines": music_lines,
-
-    }
-
-    return render(request, 'accounts/mypage.html', context)
+        headers = {'Authorization': f'Bearer {access_token}'}
+        try:
+            response = requests.get("http://localhost:8000/profiles/profile/get/", headers=headers)
+            if response.status_code == 200:
+                profile_data = response.json()
+                context = {
+                    "user": {
+                        "username": profile_data.get("username"),
+                        "email": profile_data.get("email"),
+                    },
+                    "user_profile": {
+                        "profile_picture": {"url": "/static/images/basicprofile.png"},  # 임시 기본 이미지 처리
+                    },
+                    "profile": {
+                        "nickname": profile_data.get("name", ""),
+                        "bio": profile_data.get("bio", ""),
+                        "birthday": "",  # 임시공백
+                        "blog_url": "",  # 임시공백
+                    }
+                }
+                return render(request, "accounts/mypage.html", context)
+            else:
+                return render(request, "accounts/mypage.html", {"error": "프로필 정보를 불러올 수 없습니다."})
+        except Exception as e:
+            return render(request, "accounts/mypage.html", {"error": str(e)})

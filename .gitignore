@@ -24,4 +24,4 @@ staticfiles/
 
 # GCP 버킷 key
 gcs-key.json
->>>>>>> origin/main
+
