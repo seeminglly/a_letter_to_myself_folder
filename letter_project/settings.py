@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'letters.apps.LettersConfig',
-    'schedule.routine_service',
+    'routine_service',
     'emotion_analysis.emotions',  # 감정 분석 앱
     'emotion_recommendation.recommendation.emotion_based',  # 추천 알고리즘 앱
     'emotion_recommendation.recommendation.feedback',
@@ -103,9 +103,9 @@ WSGI_APPLICATION = 'letter_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'sksk0877',
+        'NAME': 'DataBase',
+        'USER': 'data1171',
+        'PASSWORD': 'data1171',
         'HOST': 'localhost',
         'PORT': '5432',
     }

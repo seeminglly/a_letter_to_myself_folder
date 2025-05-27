@@ -21,7 +21,7 @@ app.conf.enable_utc = False
 # Celery Beat 주기 설정 (필요 시 수정)
 app.conf.beat_schedule = {
     'send-routine-reminder-every-minute': {
-        'task': 'schedule.scheduler_service.tasks.send_letter_reminders',
+        'task': 'scheduler_service.tasks.send_letter_reminders',
         'schedule': crontab(minute='*/1'),
     },
 }

@@ -1,8 +1,8 @@
 from celery import shared_task
 from django.utils.timezone import now, localtime
 from datetime import timedelta
-from schedule.routine_service.models import LetterRoutine
-from schedule.notification_service.tasks import send_notification
+from routine_service.models import LetterRoutine
+from notification_service.tasks import send_notification
 
 @shared_task
 def send_letter_reminders():
