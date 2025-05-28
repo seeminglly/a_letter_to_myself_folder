@@ -1,12 +1,12 @@
 from __future__ import absolute_import, unicode_literals
 import os
-from a_letter_to_myself_folder.routine_service.routine_service.celery import Celery
+from celery import Celery
 from celery.schedules import crontab
 
 # Django 세팅 파일 위치 지정
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'letter_project.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'routine_service.settings')
 
-app = Celery('letter_project')
+app = Celery('routine_service')
 
 # Django settings 기반 config
 app.config_from_object('django.conf:settings', namespace='CELERY')
