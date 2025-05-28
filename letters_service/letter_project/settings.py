@@ -28,19 +28,12 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG') == 'True'
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
-# gcp 버킷 환경변수 설정
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.join(BASE_DIR, 'gcs-key.json')
-BUCKET_NAME = os.getenv('BUCKET_NAME')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x5pvgjw+=nbwg@aeuv37iz=i6@gzl%)(=l80v%v#to$my(whjl'
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
 ALLOWED_HOSTS = []
 
 
