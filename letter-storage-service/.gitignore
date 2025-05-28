@@ -6,7 +6,6 @@ __pycache__/
 # 가상환경
 venv/
 env/
-.venv
 
 # IDE 설정
 .vscode/
@@ -25,4 +24,3 @@ staticfiles/
 
 # GCP 버킷 key
 gcs-key.json
->>>>>>> origin/main
