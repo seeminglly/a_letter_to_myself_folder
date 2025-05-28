@@ -78,17 +78,17 @@
             <li><a href="http://127.0.0.1:8000/letters">편지 목록</a></li>
             <li><a href="http://127.0.0.1:8000/routine">편지 루틴</a></li>
             {% if user.is_authenticated %}
-                <a href="{% url 'mypage' %}">마이페이지</a>
+                <a href="{% url 'accounts:mypage' %}">마이페이지</a>
             {% else %}
-                <a href="{% url 'login' %}">로그인</a>
+                <a href="{% url 'accounts:login' %}">로그인</a>
             {% endif %}
             <li>
                 {% if user.is_authenticated %}
-                  <a href="{% url 'logout' %}">{{ user.username }} (로그아웃)</a>
+                  <a href="{% url 'accounts:logout' %}">{{ user.username }} (로그아웃)</a>
                 
                 {% endif %}
             </li>
-            <li><a href="{% url 'signup' %}">회원가입</a></li>
+            <li><a href="{% url 'accounts:signup' %}">회원가입</a></li>
             
         </ul>
     </div>
@@ -96,16 +96,40 @@
     <div class="profile-edit-card">
       <h2>프로필 수정</h2>
       <!-- update_profile.html -->
-      <form method="POST" action="{% url 'update_profile' %}" enctype="multipart/form-data">
+      <form method="POST" action="{% url 'user:update_profile' %}" enctype="multipart/form-data">
         {% csrf_token %}
 
-        {{ profile_form.as_p }}
-        {{ picture_form.as_p }}
+        <div class="form-group">
+          <label for="profile_picture">프로필 사진</label><br>
+          {% if profile.profile_picture %}
+            <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="profile-preview">
+          {% endif %}
+          <input type="file" id="profile_picture" name="profile_picture">
+        </div>
+
+        <div class="form-group">
+          <label for="nickname">닉네임</label>
+          <input type="text" id="nickname" name="nickname" value="{{ profile.nickname }}">
+        </div>
+
+        <div class="form-group">
+          <label for="bio">한줄소개</label>
+          <textarea id="bio" name="bio" rows="3">{{ profile.bio }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="birthday">생년월일</label>
+          <input type="date" id="birthday" name="birthday" value="{{ profile.birthday|date:'Y-m-d' }}">
+        </div>
+
+        <div class="form-group">
+          <label for="blog_url">블로그 주소</label>
+          <input type="url" id="blog_url" name="blog_url" value="{{ profile.blog_url }}">
+        </div>
 
         <div class="btn-container">
           <button type="submit" class="btn">저장</button>
         </div>
-
       </form>
     </div>
 </body>

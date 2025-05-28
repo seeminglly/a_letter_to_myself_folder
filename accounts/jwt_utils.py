@@ -5,7 +5,7 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = 'HS256'
-ACCESS_TOKEN_LIFETIME = timedelta(minutes=15)
+ACCESS_TOKEN_LIFETIME = timedelta(minutes=30) #토큰 만료시간 조절
 REFRESH_TOKEN_LIFETIME = timedelta(days=7)
 
 def create_access_token(user_id):
