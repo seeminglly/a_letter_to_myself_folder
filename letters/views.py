@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render, redirect,get_object_or_404
 from django.http import JsonResponse
 # ✅ 수정
-from schedule.routine_service.models import LetterRoutine, SpecialDateRoutine
+from routine_service.models import LetterRoutine, SpecialDateRoutine
 #from emotions.utils import analyze_emotion_for_letter -> 서비스 따로 돌릴 때 경로
 #모놀리식으로 실행시킬 때 경로
 from emotion_analysis.emotions.utils import analyze_emotion_for_letter
