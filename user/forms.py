@@ -1,7 +1,9 @@
 from django import forms
 from user.models import UserProfile
-from django.contrib.auth.models import User #UserForm에서 model = User 가 인식
+#from django.contrib.auth.models import User #UserForm에서 model = User 가 인식
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 class UserForm(forms.ModelForm): #회원가입 폼에 사용
     password = forms.CharField(widget=forms.PasswordInput)
 

@@ -2,7 +2,9 @@ import pytest
 import requests_mock
 from unittest.mock import patch, Mock
 from rest_framework.test import APIClient
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 @pytest.mark.django_db
 @patch("openai.ChatCompletion.create")

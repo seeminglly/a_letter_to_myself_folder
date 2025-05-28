@@ -1,8 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.utils.timezone import now
 from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings # accounts에서 커스텀해놓은 user 모델 사용 위해
+
+User = get_user_model()
 
 CATEGORIES = (
     ('past','과거'),

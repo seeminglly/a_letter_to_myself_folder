@@ -24,9 +24,12 @@ import requests # 외부 API 호출용
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # 개발용 가짜 유저 주입
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 fake_user = User.objects.first()
-letters = Letters.objects.filter(user=fake_user)
+letters = Letter.objects.filter(user=fake_user)
 #
 
 def home(request):
@@ -103,7 +106,7 @@ def letter_list(request):
     fake_user = User.objects.first()
     if not fake_user:
         return JsonResponse({"error": "테스트용 유저가 없습니다."})
-    letters = Letters.objects.filter(user=fake_user)   # 원래는 (user=request.user) 
+    letters = Letter.objects.filter(user=fake_user)   # 원래는 (user=request.user) 
     #
 
     today = datetime.now().date()
