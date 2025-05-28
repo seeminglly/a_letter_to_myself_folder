@@ -3,7 +3,7 @@ from django.http import JsonResponse
 #from emotions.utils import analyze_emotion_for_letter -> 서비스 따로 돌릴 때 경로
 #from routines.models import LetterRoutine, SpecialDateRoutine 
 #from emotions.utils import analyze_emotion_for_letter
-from .models import Letters
+from .models import Letter
 from .forms import LetterForm
 from django.utils.timezone import now  # 현재 날짜 가져오기
 from django.contrib.auth.decorators import login_required

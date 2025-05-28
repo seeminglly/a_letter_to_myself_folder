@@ -20,12 +20,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
- #   path("commons/", include("commons.urls")),
     path("", TemplateView.as_view(template_name="commons/index.html"), name="home"),
     path("letters/", include("letters.urls")),
- #   path("routines/", include("routines.urls")),
- #   path("accounts/", include("accounts.urls")),
- #   path("profiles/", include("profiles.urls")),
- #   path("recommendations/", include("recommendations.urls")),
-  
+
 ]

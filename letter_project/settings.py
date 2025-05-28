@@ -24,6 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 하위 서비스 폴더들(emotion_analysis 등)이 패키지로 인식되도록 sys.path에 루트(BASE_DIR)를 추가함
 # 안 해주면 모놀리식 실행 시 'No module named emotions' 같은 import 에러 뜸 
 sys.path.append(str(BASE_DIR))
+sys.path.append(str(BASE_DIR / 'letters_service'))
+
 
 # .env 파일 로드
 load_dotenv(os.path.join(BASE_DIR, '.env'))
@@ -56,7 +58,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
-    'letters.apps.LettersConfig',
+    'letters_service.letters',
     'routine_service',
     'emotion_analysis.emotions',  # 감정 분석 앱
     'emotion_recommendation.recommendation.emotion_based',  # 추천 알고리즘 앱
@@ -107,7 +109,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'a_letter_to_myself',
         'USER': 'postgres',
-        'PASSWORD': 'qq',
+        'PASSWORD': 'ㄴ',
         'HOST': 'localhost',
         'PORT': '5432',
     }
