@@ -1,20 +1,20 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from django.shortcuts import redirect, render
+
 from accounts.models import User
 from .models import UserProfile
 from .serializers import *
 from .services import verify_access_token
-from rest_framework.permissions import AllowAny
-from rest_framework.decorators import permission_classes
-import requests
 
 class UserProfileGetView(APIView):
     def get(self, request):
         auth_header = request.headers.get("Authorization", "")
         if not auth_header or not auth_header.startswith('Bearer '):
             return Response({'detail': 'Authorization header missing or malformed'}, status=401)
-        token = auth_header.split(' ')[1]
+        token = auth_header.split("Bearer ")[1]
 
         try:
             user_id = verify_access_token(token)
@@ -26,28 +26,53 @@ class UserProfileGetView(APIView):
 
 
 class UserProfileUpdateView(APIView):
-    def patch(self, request):
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return Response({'detail': 'Authorization header missing or malformed'}, status=401)
-        token = auth_header.split(' ')[1]
+    def get(self, request):
+        token = request.COOKIES.get("access")
+        if not token:
+            return redirect('accounts:login')
+
+        try:
+            user_id = verify_access_token(token)
+            user = User.objects.get(id=user_id)
+            profile = UserProfile.objects.get(user_id=user_id)
+            context = {
+                'user': user,
+                'profile': profile,
+            }
+            return render(request, 'profiles/update_profile.html', context)
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            return redirect('accounts:login')
+
+    def post(self, request):
+        token = request.COOKIES.get("access")
+        if not token:
+            return redirect('accounts:login')
 
         try:
             user_id = verify_access_token(token)
         except Exception as e:
-            return Response({'detail': str(e)}, status=401)
+            print(f"[ERROR] {e}")
+            return redirect('accounts:login')
 
         try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response({'detail': 'User not found'}, status=404)
+            profile = UserProfile.objects.get(user_id=user_id)
+        except UserProfile.DoesNotExist:
+            return redirect('accounts:login')
 
-        serializer = UserProfileUpdateSerializer(user, data=request.data, partial=True)
+        data = request.POST.copy()
+        data.update(request.FILES)
+
+        serializer = UserProfileUpdateSerializer(profile, data=data, partial=True)
+
         if serializer.is_valid():
             serializer.save()
-            return Response(UserProfileSerializer(user).data)
+            return redirect('accounts:mypage')
         else:
-            return Response(serializer.errors, status=400)
+            return render(request, 'profiles/update_profile.html', {
+                'profile': profile,
+                'errors': serializer.errors,
+            })
 
 
 class UserCreateInternalView(APIView):

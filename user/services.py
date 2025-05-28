@@ -5,6 +5,7 @@ AUTH_SERVICE_URL = "http://localhost:8000/accounts"
 
 def verify_access_token(token):
     try:
+        # print(f"Verifying token: {token}") 토큰 확인
         response = requests.post(f"{AUTH_SERVICE_URL}/internal/verify/", json={"token": token})
         if response.status_code == 200:
             return response.json()['user_id']

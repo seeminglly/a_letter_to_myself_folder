@@ -29,6 +29,7 @@ from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from .jwt_utils import *
 from .services import create_user_in_user_service
+from .serializers import *
 #from emotions.utils import analyze_emotion_for_letter -> 서비스 따로 돌릴 때 경로
 #모놀리식으로 실행시킬 때 경로
 from emotion_analysis.emotions.utils import analyze_emotion_for_letter
@@ -150,13 +151,13 @@ class TokenVerifyInternalView(APIView):
 
 class MypageView(APIView):
     def get(self, request):
-        access_token = request.COOKIES.get('access')
+        access_token = request.COOKIES.get("access")
         if not access_token:
             return redirect('accounts:login')
 
         headers = {'Authorization': f'Bearer {access_token}'}
         try:
-            response = requests.get("http://localhost:8000/profiles/profile/get/", headers=headers)
+            response = requests.get("http://localhost:8000/user/profile/get/", headers=headers)
             if response.status_code == 200:
                 profile_data = response.json()
                 context = {
@@ -168,10 +169,10 @@ class MypageView(APIView):
                         "profile_picture": {"url": "/static/images/basicprofile.png"},  # 임시 기본 이미지 처리
                     },
                     "profile": {
-                        "nickname": profile_data.get("name", ""),
+                        "nickname": profile_data.get("nickname", ""),
                         "bio": profile_data.get("bio", ""),
-                        "birthday": "",  # 임시공백
-                        "blog_url": "",  # 임시공백
+                        "birthday": profile_data.get("birthday", ""),
+                        "blog_url": profile_data.get("blog_url", ""),
                     }
                 }
                 return render(request, "accounts/mypage.html", context)
