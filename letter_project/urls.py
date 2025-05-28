@@ -22,7 +22,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", TemplateView.as_view(template_name="commons/index.html"), name="home"),
     path("letters/", include("letters.urls")),
-    path("routines/", include(("schedule.routine_service.urls", "routines"), namespace="routines")),
+    path("routines/", include(("routine_service.urls", "routines"), namespace="routines")),
     path("accounts/", include("accounts.urls")),
     path("user/", include("user.urls")),
     #path("recommendations/", include("recommendations.urls")),

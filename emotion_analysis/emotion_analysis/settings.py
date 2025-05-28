@@ -2,10 +2,20 @@
 Django settings for letter_project project.
 """
 
-from pathlib import Path
 import os
+from dotenv import load_dotenv
+from pathlib import Path
 
+# BASE_DIR 설정
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# .env 파일 로드
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+# 환경 변수 사용 예시
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG') == 'True'
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 SECRET_KEY = 'django-insecure-x5pvgjw+=nbwg@aeuv37iz=i6@gzl%)(=l80v%v#to$my(whjl'
 
