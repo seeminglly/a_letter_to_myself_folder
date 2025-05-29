@@ -9,21 +9,7 @@ from .models import UserProfile
 from .serializers import *
 from .services import verify_access_token
 
-class UserProfileGetView(APIView):
-    def get(self, request):
-        auth_header = request.headers.get("Authorization", "")
-        if not auth_header or not auth_header.startswith('Bearer '):
-            return Response({'detail': 'Authorization header missing or malformed'}, status=401)
-        token = auth_header.split("Bearer ")[1]
-
-        try:
-            user_id = verify_access_token(token)
-            profile = UserProfile.objects.get(user_id=user_id)
-            serializer = UserProfileSerializer(profile)
-            return Response(serializer.data)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=400)
-
+#클라이언트 API
 
 class UserProfileUpdateView(APIView):
     def get(self, request):
@@ -74,6 +60,22 @@ class UserProfileUpdateView(APIView):
                 'errors': serializer.errors,
             })
 
+# 내부 서비스 API
+
+class UserProfileGetView(APIView):
+    def get(self, request):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return Response({'detail': 'Authorization header missing or malformed'}, status=401)
+        token = auth_header.split("Bearer ")[1]
+
+        try:
+            user_id = verify_access_token(token)
+            profile = UserProfile.objects.get(user_id=user_id)
+            serializer = UserProfileSerializer(profile)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=400)
 
 class UserCreateInternalView(APIView):
     def post(self, request):
@@ -81,13 +83,3 @@ class UserCreateInternalView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response({"user_id": user.id}, status=201)
-
-class UserRetrieveInternalView(APIView):
-    def get(self, request, user_id):
-        try:
-            profile = UserProfile.objects.get(user_id=user_id)
-            serializer = UserProfileSerializer(profile)
-            return Response(serializer.data)
-        except UserProfile.DoesNotExist:
-            return Response({"detail": "User not found"}, status=404)
-
