@@ -18,7 +18,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
 from django.contrib.auth.hashers import make_password, check_password
 from django.views import View
-from user.forms import UserForm # 있어야되는지?
+
 from .forms import SignupForm, LoginForm
 from django.shortcuts import render
 from collections import Counter
@@ -30,12 +30,12 @@ from django.views.decorators.csrf import csrf_exempt
 from .jwt_utils import *
 from .services import create_user_in_user_service
 from .serializers import *
+from .models import User
 #from emotions.utils import analyze_emotion_for_letter -> 서비스 따로 돌릴 때 경로
 #모놀리식으로 실행시킬 때 경로
 from emotion_analysis.emotions.utils import analyze_emotion_for_letter
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
-from .models import User
 import requests
 
 # 임시 메모리 저장소 (프로덕션에서는 Redis 등 사용)
@@ -43,6 +43,7 @@ REFRESH_TOKEN_STORE = {}
 
 
 
+#클라이언트 API
 
 class SignupView(View):
     def get(self, request):
@@ -117,6 +118,42 @@ class LogoutView(View):
         return response
 
 
+
+
+class MypageView(APIView):
+    def get(self, request):
+        access_token = request.COOKIES.get("access")
+        if not access_token:
+            return redirect('accounts:login')
+
+        headers = {'Authorization': f'Bearer {access_token}'}
+        try:
+            response = requests.get("http://localhost:8000/user/internal/get/", headers=headers) # 경로 추후 변경 필요
+            if response.status_code == 200:
+                profile_data = response.json()
+                context = {
+                    "user": {
+                        "username": profile_data.get("username"),
+                        "email": profile_data.get("email"),
+                    },
+                    "user_profile": {
+                        "profile_picture": {"url": "/static/images/basicprofile.png"},  # 임시 기본 이미지 처리
+                    },
+                    "profile": {
+                        "nickname": profile_data.get("nickname", ""),
+                        "bio": profile_data.get("bio", ""),
+                        "birthday": profile_data.get("birthday", ""),
+                        "blog_url": profile_data.get("blog_url", ""),
+                    }
+                }
+                return render(request, "accounts/mypage.html", context)
+            else:
+                return render(request, "accounts/mypage.html", {"error": "프로필 정보를 불러올 수 없습니다."})
+        except Exception as e:
+            return render(request, "accounts/mypage.html", {"error": str(e)})
+
+# 내부 서비스 API   
+
 class TokenRefreshView(APIView):
     def post(self, request):
         serializer = TokenRefreshSerializer(data=request.data)
@@ -146,37 +183,3 @@ class TokenVerifyInternalView(APIView):
             return Response({'detail': 'Token expired'}, status=401)
         except InvalidTokenError:
             return Response({'detail': 'Invalid token'}, status=401)
-
-
-
-class MypageView(APIView):
-    def get(self, request):
-        access_token = request.COOKIES.get("access")
-        if not access_token:
-            return redirect('accounts:login')
-
-        headers = {'Authorization': f'Bearer {access_token}'}
-        try:
-            response = requests.get("http://localhost:8000/user/profile/get/", headers=headers)
-            if response.status_code == 200:
-                profile_data = response.json()
-                context = {
-                    "user": {
-                        "username": profile_data.get("username"),
-                        "email": profile_data.get("email"),
-                    },
-                    "user_profile": {
-                        "profile_picture": {"url": "/static/images/basicprofile.png"},  # 임시 기본 이미지 처리
-                    },
-                    "profile": {
-                        "nickname": profile_data.get("nickname", ""),
-                        "bio": profile_data.get("bio", ""),
-                        "birthday": profile_data.get("birthday", ""),
-                        "blog_url": profile_data.get("blog_url", ""),
-                    }
-                }
-                return render(request, "accounts/mypage.html", context)
-            else:
-                return render(request, "accounts/mypage.html", {"error": "프로필 정보를 불러올 수 없습니다."})
-        except Exception as e:
-            return render(request, "accounts/mypage.html", {"error": str(e)})
