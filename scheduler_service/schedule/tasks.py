@@ -1,11 +1,14 @@
+import requests
 from celery import shared_task
-from django.utils.timezone import now, localtime
-from datetime import timedelta
-from routine_service.models import LetterRoutine
-from notification_service.tasks import send_notification
+import os
 
 @shared_task
 def send_letter_reminders():
+    
+    #현재 시간 정보 가져오기
+    from django.utils.timezone import now, localtime
+    from datetime import timedelta
+
     now_dt = localtime(now()).replace(second=0, microsecond=0)
     today = now_dt.strftime("%A") # Monday, Tuesday ...
     current_day = now_dt.day # 1~31
