@@ -6,7 +6,19 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 
-@login_required(login_url='login')
+#@login_required(login_url='login')
+
+
+# 뷰 함수 안에 임시 유저 설정
+# 실제 서비스에선 쓰면 안 됨!!!!!!!!!!!!!!!!
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+def save_routine(request):
+    # 임시 유저 1번 할당 (DB에 최소한 1명 있어야 함)
+    request.user = User.objects.first()
+
+
 @csrf_exempt
 def save_routine(request):
     days = range(1, 32)
@@ -58,12 +70,21 @@ WEEKDAYS = {
     "Friday": 4, "Saturday": 5, "Sunday": 6
 }
 
-@login_required
+#@login_required
 def get_routine_events(request):
     user = request.user
-    routines = LetterRoutine.objects.filter(user=user)
-    special_dates = SpecialDateRoutine.objects.filter(user=user)
+    
+    #인증토큰 구현하면 없애야하는 코드 2줄
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': '로그인이 필요합니다.'}, status=401)
 
+    #인증토큰 구현하면 주석 없애야함
+    #routines = LetterRoutine.objects.filter(user=user)
+    #special_dates = SpecialDateRoutine.objects.filter(user=user)
+
+    #인증토큰 구현하면 없애야하는 코드
+    user=User.objects.first()
+    
     today = datetime.today().date()
     events = []
 
