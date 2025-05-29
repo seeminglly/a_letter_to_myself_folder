@@ -21,7 +21,7 @@ def reanalyze_all_emotions(request):
     try:
         # ✅ 1. letter-service에서 최근 편지 5개 가져오기
         response = requests.get(
-            "http://localhost:8001/api/letters/",
+            "http://localhost:8000/api/letters/",
             headers={"Authorization": f"Bearer {request.auth}"}
         )
         response.raise_for_status()

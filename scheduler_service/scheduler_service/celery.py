@@ -1,5 +1,7 @@
 from celery import Celery
 from celery.schedules import crontab
+from schedule.tasks import send_letter_reminders
+from celery import shared_task
 import os
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'scheduler_service.settings')
@@ -17,3 +19,12 @@ app.conf.beat_schedule = {
         'schedule': crontab(minute='*/1'),
     },
 }
+
+@app.on_after_configure.connect
+
+def setup_periodic_tasks(sender, **kwargs):
+    sender.add_periodic_task(
+        crontab(minute="*"),  # 1분마다
+        send_letter_reminders.s(),
+        name='check routines every minute'
+    )

@@ -4,6 +4,7 @@ from .models import LetterRoutine, SpecialDateRoutine
 from django.utils.timezone import now
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.timezone import now, localtime
 from datetime import datetime, timedelta
 
 #@login_required(login_url='login')
@@ -74,13 +75,8 @@ WEEKDAYS = {
 def get_routine_events(request):
     user = request.user
     
-    #인증토큰 구현하면 없애야하는 코드 2줄
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': '로그인이 필요합니다.'}, status=401)
-
-    #인증토큰 구현하면 주석 없애야함
-    #routines = LetterRoutine.objects.filter(user=user)
-    #special_dates = SpecialDateRoutine.objects.filter(user=user)
+    routines = LetterRoutine.objects.filter(user=user)
+    special_dates = SpecialDateRoutine.objects.filter(user=user)
 
     #인증토큰 구현하면 없애야하는 코드
     user=User.objects.first()
@@ -131,3 +127,46 @@ def delete_routine(request, pk):
         return JsonResponse({'status': 'success'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+def get_today_routines(request):
+    now_dt = localtime(now()).replace(second=0, microsecond=0)
+    today = now_dt.strftime("%A")
+    current_day = now_dt.day
+    window_start = (now_dt - timedelta(minutes=1)).time()
+    window_end = (now_dt + timedelta(minutes=1)).time()
+
+    user = User.objects.first()  # 임시 사용자
+
+    routines = LetterRoutine.objects.filter(user=user, time__range=(window_start, window_end))
+    result = []
+
+    for r in routines:
+        if r.routine_type == 'weekly' and r.day_of_week == today:
+            result.append({
+                "user_email": r.user.email,
+                "username": r.user.username,
+                "time": str(r.time)
+            })
+        elif r.routine_type == 'monthly' and r.day_of_month == current_day:
+            result.append({
+                "user_email": r.user.email,
+                "username": r.user.username,
+                "time": str(r.time)
+            })
+
+    return JsonResponse(result, safe=False)
+
+@csrf_exempt
+def test_routines_for_scheduler(request):
+    routines = LetterRoutine.objects.all()[:3]  # 일부만 테스트용으로
+    result = []
+
+    for r in routines:
+        result.append({
+            "email": "dummy@example.com",   # 실제 email 없어도 됨
+            "username": "TestUser",
+            "time": str(r.time),
+        })
+
+    return JsonResponse(result, safe=False)
