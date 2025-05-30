@@ -6,7 +6,7 @@ class UserCreateSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def create(self, validated_data):
-        from accounts.models import User
+        from a_letter_to_myself_folder.auth_service.authentication.models import User
         user = User.objects.get(username=validated_data['username'])
         profile = UserProfile.objects.create(user=user)
         return profile

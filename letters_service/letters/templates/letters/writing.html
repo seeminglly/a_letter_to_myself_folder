@@ -26,13 +26,13 @@
         <li><a href="{% url 'letters:letter_list' %}">편지 목록</a></li>
         {% comment %} <li><a href="{% url 'routines:save_routine' %}">편지 루틴</a></li> {% endcomment %}
         {% comment %} {% if user.is_authenticated %}
-            <li><a href="{% url 'accounts:mypage' %}">마이페이지</a></li>
-            <li><a href="{% url 'accounts:logout' %}">{{ user.username }} (로그아웃)</a></li>
+            <li><a href="{% url 'authentication:mypage' %}">마이페이지</a></li>
+            <li><a href="{% url 'authentication:logout' %}">{{ user.username }} (로그아웃)</a></li>
         {% else %}
-            <li><a href="{% url 'accounts:login' %}">로그인</a></li>
+            <li><a href="{% url 'authentication:login' %}">로그인</a></li>
         {% endif %}
 
-        <li><a href="{% url 'accounts:signup' %}">회원가입</a></li> {% endcomment %}
+        <li><a href="{% url 'authentication:signup' %}">회원가입</a></li> {% endcomment %}
     </ul>
 </div>
 

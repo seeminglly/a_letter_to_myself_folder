@@ -51,7 +51,7 @@ REFRESH_TOKEN_STORE = {}
 class SignupView(View):
     def get(self, request):
         form = SignupForm()
-        return render(request, "accounts/signup.html", {"form": form})
+        return render(request, "authentication/signup.html", {"form": form})
 
     def post(self, request):
         form = SignupForm(request.POST)
@@ -62,7 +62,7 @@ class SignupView(View):
 
             if User.objects.filter(username=username).exists():
                 form.add_error('username', 'Username already exists')
-                return render(request, "accounts/signup.html", {"form": form})
+                return render(request, "authentication/signup.html", {"form": form})
 
             user = User.objects.create_user(username=username, email=email, password=password)
 
@@ -71,16 +71,16 @@ class SignupView(View):
             except Exception as e:
                 user.delete()  # 롤백
                 form.add_error(None, 'Failed to create profile in user service')
-                return render(request, "accounts/signup.html", {"form": form})
+                return render(request, "authentication/signup.html", {"form": form})
 
-            return redirect("accounts:login")
-        return render(request, "accounts/signup.html", {"form": form})
+            return redirect("authentication:login")
+        return render(request, "authentication/signup.html", {"form": form})
 
 
 class LoginView(View):
     def get(self, request):
         form = LoginForm()
-        return render(request, "accounts/login.html", {"form": form})
+        return render(request, "authentication/login.html", {"form": form})
 
     def post(self, request):
         form = LoginForm(request.POST)
@@ -101,11 +101,11 @@ class LoginView(View):
                 response.set_cookie("refresh", refresh, httponly=True, samesite='Lax')
                 return response
             else:
-                return render(request, "accounts/login.html", {
+                return render(request, "authentication/login.html", {
                     "form": form,
                     "error": "Invalid credentials"
                 })
-        return render(request, "accounts/login.html", {"form": form})
+        return render(request, "authentication/login.html", {"form": form})
 
 
 class LogoutView(View):
@@ -127,7 +127,7 @@ class MypageView(APIView):
     def get(self, request):
         access_token = request.COOKIES.get("access")
         if not access_token:
-            return redirect('accounts:login')
+            return redirect('authentication:login')
 
         headers = {'Authorization': f'Bearer {access_token}'}
         try:
@@ -149,11 +149,11 @@ class MypageView(APIView):
                         "blog_url": profile_data.get("blog_url", ""),
                     }
                 }
-                return render(request, "accounts/mypage.html", context)
+                return render(request, "authentication/mypage.html", context)
             else:
-                return render(request, "accounts/mypage.html", {"error": "프로필 정보를 불러올 수 없습니다."})
+                return render(request, "authentication/mypage.html", {"error": "프로필 정보를 불러올 수 없습니다."})
         except Exception as e:
-            return render(request, "accounts/mypage.html", {"error": str(e)})
+            return render(request, "authentication/mypage.html", {"error": str(e)})
 
 # 내부 서비스 API   
 

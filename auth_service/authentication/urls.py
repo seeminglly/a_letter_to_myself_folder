@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import *
 
-app_name = "accounts"
+app_name = "authentication"
 
 urlpatterns = [
     #클라이언트 API

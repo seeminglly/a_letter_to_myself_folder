@@ -30,7 +30,7 @@ urlpatterns = [
     #모놀리식으로 실행할 때
     path("routines/", include(("routine_service.routine.urls", "routines"), namespace="routines")),
     
-    path("accounts/", include("accounts.urls")),
+    path("authentication/", include("authentication.urls")),
     path("user/", include("user.urls")),
     
     #path("recommendations/", include("recommendations.urls")), ->마이크로서비스로 돌릴 때

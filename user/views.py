@@ -4,7 +4,7 @@ from rest_framework import status
 
 from django.shortcuts import redirect, render
 
-from accounts.models import User
+from a_letter_to_myself_folder.auth_service.authentication.models import User
 from .models import UserProfile
 from .serializers import *
 from .services import verify_access_token
@@ -15,7 +15,7 @@ class UserProfileUpdateView(APIView):
     def get(self, request):
         token = request.COOKIES.get("access")
         if not token:
-            return redirect('accounts:login')
+            return redirect('authentication:login')
 
         try:
             user_id = verify_access_token(token)
@@ -28,23 +28,23 @@ class UserProfileUpdateView(APIView):
             return render(request, 'profiles/update_profile.html', context)
         except Exception as e:
             print(f"[ERROR] {e}")
-            return redirect('accounts:login')
+            return redirect('authentication:login')
 
     def post(self, request):
         token = request.COOKIES.get("access")
         if not token:
-            return redirect('accounts:login')
+            return redirect('authentication:login')
 
         try:
             user_id = verify_access_token(token)
         except Exception as e:
             print(f"[ERROR] {e}")
-            return redirect('accounts:login')
+            return redirect('authentication:login')
 
         try:
             profile = UserProfile.objects.get(user_id=user_id)
         except UserProfile.DoesNotExist:
-            return redirect('accounts:login')
+            return redirect('authentication:login')
 
         data = request.POST.copy()
         data.update(request.FILES)
@@ -53,7 +53,7 @@ class UserProfileUpdateView(APIView):
 
         if serializer.is_valid():
             serializer.save()
-            return redirect('accounts:mypage')
+            return redirect('authentication:mypage')
         else:
             return render(request, 'profiles/update_profile.html', {
                 'profile': profile,

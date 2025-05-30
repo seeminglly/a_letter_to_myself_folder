@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts',
+    'authentication',
     'letters_service.letters',
     "routine_service.routine_service",
     'routine_service.routine',
@@ -163,9 +163,9 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = 'authentication.User'
 AUTHENTICATION_BACKENDS = [
-    'accounts.auth_backends.CustomBackend',
+    'authentication.auth_backends.CustomBackend',
 ]
 
 
