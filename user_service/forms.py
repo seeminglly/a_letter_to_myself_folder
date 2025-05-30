@@ -1,5 +1,5 @@
 from django import forms
-from user.models import UserProfile
+from a_letter_to_myself_folder.user_service.user.models import UserProfile
 #from django.contrib.auth.models import User #UserForm에서 model = User 가 인식
 from django.contrib.auth import get_user_model
 

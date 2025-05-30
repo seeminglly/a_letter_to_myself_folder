@@ -24,7 +24,7 @@
 
     <div class="formContainer">
         <div class="signin">
-          <form method="POST" action="{% url 'accounts:login' %}">
+          <form method="POST" action="{% url 'authentication:login' %}">
             {% csrf_token %}
             <div class="logo">
                 <img src="{% static 'images/stamp.png' %}" alt="왁스실링 UI" width="100px">
@@ -47,7 +47,7 @@
               <p style="color: brown;">{{ error }}</p>
             {% endif %}
           </form>
-          <a href="{% url 'accounts:signup' %}" id="signup">sign up</a>
+          <a href="{% url 'authentication:signup' %}" id="signup">sign up</a>
         </div>
 
 

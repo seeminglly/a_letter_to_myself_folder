@@ -1,6 +1,6 @@
 import json
 from emotion_recommendation.recommendation.emotion_based.views import split_recommendations
-from user.models import UserProfile
+from a_letter_to_myself_folder.user_service.user.models import UserProfile
 from django.shortcuts import render,get_object_or_404
 import requests
 # Create your views here.
