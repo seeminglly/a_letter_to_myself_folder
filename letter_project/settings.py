@@ -59,7 +59,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'letters_service.letters',
-    'routine_service',
+    "routine_service.routine_service",
+    'routine_service.routine',
     'emotion_analysis.emotions',  # 감정 분석 앱
     'emotion_recommendation.recommendation.emotion_based',  # 추천 알고리즘 앱
     'emotion_recommendation.recommendation.feedback',
@@ -109,7 +110,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'a_letter_to_myself',
         'USER': 'postgres',
-        'PASSWORD': '비번',
+        'PASSWORD': 'sksk0877',
         'HOST': 'localhost',
         'PORT': '5432',
     }

@@ -1,9 +1,8 @@
 from django.db import models
 from django.utils.timezone import now
 from django.conf import settings # accounts에서 커스텀해놓은 user 모델 사용
-from django.contrib.auth import get_user_model
 
-User = get_user_model()
+
 # Create your models here.
 class LetterRoutine(models.Model):
     id = models.AutoField(primary_key=True)

@@ -25,9 +25,14 @@ urlpatterns = [
     #path("letters/", include("letters.urls")), ->마이크로서비스
     #모놀리식으로 실행할 때
     path("letters/", include("letters_service.letters.urls")),
-    path("routines/", include(("routine_service.urls", "routines"), namespace="routines")),
+    
+    #path("routines/", include(("routine_service.urls", "routines"), namespace="routines")), ->마이크로서비스
+    #모놀리식으로 실행할 때
+    path("routines/", include(("routine_service.routine.urls", "routines"), namespace="routines")),
+    
     path("accounts/", include("accounts.urls")),
     path("user/", include("user.urls")),
+    
     #path("recommendations/", include("recommendations.urls")), ->마이크로서비스로 돌릴 때
     #모놀리식으로 돌릴 때
     path("api/recommendations/", include(("emotion_recommendation.recommendation.urls", "recommendations"), namespace="recommendations")),
