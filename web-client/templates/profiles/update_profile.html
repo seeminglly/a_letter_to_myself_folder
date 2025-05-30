@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <!-- FullCalendar JS -->
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+     <!-- JavaScript 연결 -->
+    <script src="{% static 'js/script.js' %}"></script>
+    <!-- FullCalendar CSS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <title>나에게 쓰는 편지</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v={{ time }}">
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; }
+
+      .profile-edit-card {
+        max-width: 500px;
+        margin: auto;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;  /* 항목들이 세로로 쌓이도록 설정 */
+        position: relative;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        font-weight: bold;
+      }
+
+      input, textarea {
+        width: 90%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .profile-preview {
+        display: block;
+        margin-top: 10px;
+        max-width: 100px;
+        border-radius: 50%;
+      }
+
+      .btn-container {
+  margin-top: 20px;
+  text-align: center;
+  position: static;
+}
+
+
+  </style>
+</head>
+
+<body>
+    <header style="position: relative;">
+        <h1 style=" font-family: 'KCC-Sonkeechung';">A Letter To Myself</h1>
+    </header>
+    <!-- 햄버거 버튼 -->
+    <div class="btn">
+        <img src="{% static 'images/poststamp.png' %}" alt="우표스티커 UI" width="50px">
+    </div>
+
+    <!-- 메뉴 바깥을 클릭하면 닫힘 -->
+    <div class="page_cover"></div
+      >
+    <div id="menu">
+        <ul class="nav">
+            <li><a href="http://127.0.0.1:8000/writing">편지 쓰기</a></li>
+            <li><a href="http://127.0.0.1:8000/letters">편지 목록</a></li>
+            <li><a href="http://127.0.0.1:8000/routine">편지 루틴</a></li>
+            {% if user.is_authenticated %}
+                <a href="{% url 'accounts:mypage' %}">마이페이지</a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}">로그인</a>
+            {% endif %}
+            <li>
+                {% if user.is_authenticated %}
+                  <a href="{% url 'accounts:logout' %}">{{ user.username }} (로그아웃)</a>
+                
+                {% endif %}
+            </li>
+            <li><a href="{% url 'accounts:signup' %}">회원가입</a></li>
+            
+        </ul>
+    </div>
+
+    <div class="profile-edit-card">
+      <h2>프로필 수정</h2>
+      <!-- update_profile.html -->
+      <form method="POST" action="{% url 'user:update_profile' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label for="profile_picture">프로필 사진</label><br>
+          {% if profile.profile_picture %}
+            <img src="{{ profile.profile_picture.url }}" alt="Profile Picture" class="profile-preview">
+          {% endif %}
+          <input type="file" id="profile_picture" name="profile_picture">
+        </div>
+
+        <div class="form-group">
+          <label for="nickname">닉네임</label>
+          <input type="text" id="nickname" name="nickname" value="{{ profile.nickname }}">
+        </div>
+
+        <div class="form-group">
+          <label for="bio">한줄소개</label>
+          <textarea id="bio" name="bio" rows="3">{{ profile.bio }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="birthday">생년월일</label>
+          <input type="date" id="birthday" name="birthday" value="{{ profile.birthday|date:'Y-m-d' }}">
+        </div>
+
+        <div class="form-group">
+          <label for="blog_url">블로그 주소</label>
+          <input type="url" id="blog_url" name="blog_url" value="{{ profile.blog_url }}">
+        </div>
+
+        <div class="btn-container">
+          <button type="submit" class="btn">저장</button>
+        </div>
+      </form>
+    </div>
+</body>
+</html>
