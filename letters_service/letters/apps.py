@@ -1,0 +1,27 @@
+# from django.apps import AppConfig
+
+
+# class LettersConfig(AppConfig):
+#     default_auto_field = 'django.db.models.BigAutoField'
+#     #name = 'letters' -> 마이크로서비스일때
+#     #모놀리식일때
+#     name = 'letters_service.letters'
+
+#     def ready(self):
+#         # 마이크로서비스일때
+#         # from letters.models import Letter  # ✅ 강제로 models.py 로드
+        
+#         #모놀리식일때
+#         from letters_service.letters.models import Letter
+
+from django.apps import AppConfig
+
+class LettersConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    
+    # ✅ 마이크로서비스 기준: 상대 경로 사용
+    name = 'letters'
+
+    def ready(self):
+        # ✅ models 강제 로드 (신호 연결 등 필요 시)
+        from letters.models import Letter
