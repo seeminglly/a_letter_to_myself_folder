@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.log
+
+# Virtualenv
+venv/
+env/
+ENV/
+
+# Django stuff
+*.sqlite3
+*.db
+*.pyo
+*.pyd
+*.pdb
+
+# Migrations cache
+**/migrations/**/__pycache__/
+**/migrations/**/*.pyc
+
+# Secret files
+.env
+.env.*
+
+# VSCode (IDE 별로 추가 가능)
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
