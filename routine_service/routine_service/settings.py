@@ -48,10 +48,15 @@ WSGI_APPLICATION = 'routine_service.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'routine_db',
+        'USER': 'postgres',
+        'PASSWORD': 'sksk0877',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Seoul'

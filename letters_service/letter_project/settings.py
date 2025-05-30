@@ -95,9 +95,9 @@ WSGI_APPLICATION = 'letter_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'a_letter_to_myself',
         'USER': 'postgres',
-        'PASSWORD': '0000',
+        'PASSWORD': 'sksk0877',
         'HOST': 'localhost',
         'PORT': '5432',
     }

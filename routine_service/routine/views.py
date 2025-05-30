@@ -82,7 +82,6 @@ WEEKDAYS = {
 #@login_required
 def get_routine_events(request):
     
-    user = request.user
     
     
     
@@ -94,12 +93,10 @@ def get_routine_events(request):
     
     
     
-    
+    user = request.user
     routines = LetterRoutine.objects.filter(user=user)
     special_dates = SpecialDateRoutine.objects.filter(user=user)
 
-    #인증토큰 구현하면 없애야하는 코드
-    user=User.objects.first()
     
     today = datetime.today().date()
     events = []
