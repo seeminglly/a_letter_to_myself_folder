@@ -67,8 +67,12 @@ def save_routine(request):
         "special_routine_id": special_routine.id if special_routine else None
     }
 
-    return render(request, "routines/routine.html", lists)
+    #return render(request, "routines/routine.html", lists)
 
+    return JsonResponse({
+        "routine_id": routine.id if routine else None,
+        "special_routine_id": special_routine.id if special_routine else None
+    })
 
 WEEKDAYS = {
     "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
