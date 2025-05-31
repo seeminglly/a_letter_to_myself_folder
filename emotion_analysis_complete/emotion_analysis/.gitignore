@@ -6,10 +6,14 @@ __pycache__/
 # 가상환경
 venv/
 env/
+.venv
 
 # IDE 설정
 .vscode/
 .idea/
+*.iml
+*.ipr
+*.iws
 
 # 환경변수
 .env
@@ -19,8 +23,6 @@ env/
 # media 파일
 media/
 staticfiles/
-.vscode/
-.idea/
 
 # GCP 버킷 key
 gcs-key.json
