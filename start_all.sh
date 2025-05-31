@@ -9,7 +9,7 @@ SERVICES=(
     "scheduler_service:8004"
     "notification_service:8005"
     "letters_service:8006"
-    "letter-storage-service:8007"
+    "letter_storage_service:8007"
     "emotion_analysis:8008"
     "emotion_store_project:8009"
     "emotion_recommendation:8010"
