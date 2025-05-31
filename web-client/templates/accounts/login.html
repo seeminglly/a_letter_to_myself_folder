@@ -11,20 +11,20 @@
     <!-- FullCalendar CSS -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
     <title>나에게 쓰는 편지</title>
-    <link rel="stylesheet" href="{% static 'css/accounts/login.css' %}">    <style>
+    <link rel="stylesheet" href="{% static 'css/authentication/login.css' %}">    <style>
         body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; }
     </style>
 </head>
 <body>
     <header style="position: relative;">
-        <h1 style=" font-family: 'KCC-Sonkeechung';"">
+        <h1 style=" font-family: 'KCC-Sonkeechung';">
         A Letter To Myself</h1>
     </header>
    
 
     <div class="formContainer">
         <div class="signin">
-          <form method="POST" action="{% url 'accounts:login' %}">
+          <form method="POST" action="{% url 'authentication:login' %}">
             {% csrf_token %}
             <div class="logo">
                 <img src="{% static 'images/stamp.png' %}" alt="왁스실링 UI" width="100px">
@@ -47,11 +47,9 @@
               <p style="color: brown;">{{ error }}</p>
             {% endif %}
           </form>
-          <a href="{% url 'accounts:signup' %}" id="signup">sign up</a>
-        </div>
-
-
- 
+          <a href="{% url 'authentication:signup' %}" id="signup">sign up</a>
+        </div><!-- .signin -->
+    </div> <!-- .formContainer -->
 </body>
 </html>
 

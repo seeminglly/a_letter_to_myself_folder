@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A Letter To Myself</title>
-    <link rel="stylesheet" href="{% static 'css/accounts/index.css' %}">
+    <link rel="stylesheet" href="{% static 'css/authentication/index.css' %}">
 
     
 </head>
@@ -32,13 +32,13 @@
 
 
         {% if user.is_authenticated %}
-            <li><a href="{% url 'accounts:mypage' %}">마이페이지</a></li>
-            <li><a href="{% url 'accounts:logout' %}">{{ user.username }} (로그아웃)</a></li>
+            <li><a href="{% url 'authentication:mypage' %}">마이페이지</a></li>
+            <li><a href="{% url 'authentication:logout' %}">{{ user.username }} (로그아웃)</a></li>
         {% else %}
-            <li><a href="{% url 'accounts:login' %}">로그인</a></li>
+            <li><a href="{% url 'authentication:login' %}">로그인</a></li>
         {% endif %}
 
-        <li><a href="{% url 'accounts:signup' %}">회원가입</a></li>
+        <li><a href="{% url 'authentication:signup' %}">회원가입</a></li>
     </ul>
 </div>
 

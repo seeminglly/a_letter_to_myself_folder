@@ -78,18 +78,18 @@
             <li><a href="http://127.0.0.1:8000/letters">편지 목록</a></li>
             <li><a href="http://127.0.0.1:8000/routine">편지 루틴</a></li>
             {% if user.is_authenticated %}
-                <a href="{% url 'accounts:mypage' %}">마이페이지</a>
+                <a href="{% url 'authentication:mypage' %}">마이페이지</a>
             {% else %}
-                <a href="{% url 'accounts:login' %}">로그인</a>
+                <a href="{% url 'authentication:login' %}">로그인</a>
             {% endif %}
             <li>
                 {% if user.is_authenticated %}
-                  <a href="{% url 'accounts:logout' %}">{{ user.username }} (로그아웃)</a>
-                
+                  <a href="{% url 'authentication:logout' %}">{{ user.username }} (로그아웃)</a>
+
                 {% endif %}
             </li>
-            <li><a href="{% url 'accounts:signup' %}">회원가입</a></li>
-            
+            <li><a href="{% url 'authentication:signup' %}">회원가입</a></li>
+
         </ul>
     </div>
 

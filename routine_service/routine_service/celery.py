@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery
@@ -26,4 +25,3 @@ app.conf.beat_schedule = {
         'schedule': crontab(minute='*/1'),
     },
 }
-

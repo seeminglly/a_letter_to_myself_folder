@@ -9,16 +9,6 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'mydatabase',
-        'USER': 'joryeoha',
-        'PASSWORD': 'dbchm',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
 
 
 from pathlib import Path
@@ -66,8 +56,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts',
-    'letters_service.letters',
+    'authentication',
+    'letters',
     "routine_service.routine_service",
     'routine_service.routine',
     'emotion_analysis.emotions',  # 감정 분석 앱
@@ -116,19 +106,11 @@ WSGI_APPLICATION = 'letter_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-
-        # 'NAME': 'DataBase',
-        # 'USER': 'data1171',
-        # 'PASSWORD': 'data1171',
-
-        # 'NAME': 'a_letter_to_myself',
-        # 'USER': 'postgres',
-        # 'PASSWORD': 'ㄴ',
-        'NAME': 'a_letter_to_myself',
-        'USER': 'postgres',
-        'PASSWORD': 'sksk0877',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -179,9 +161,9 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'accounts.User'
+AUTH_USER_MODEL = 'authentication.User'
 AUTHENTICATION_BACKENDS = [
-    'accounts.auth_backends.CustomBackend',
+    'authentication.auth_backends.CustomBackend',
 ]
 
 

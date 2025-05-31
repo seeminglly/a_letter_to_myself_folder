@@ -46,17 +46,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'accounts',
-    'letters_service.letters',
-    # 'routines',
-    # 'recommendations',
-    # 'emotions',
-    # 'profiles',  
-    # 'commons',
+    'letters',
 ]
 
 
-LETTER_STORAGE_SERVICE_BASE_URL = 'http://localhost:8001' # letter_storage 서비스가 실행되는 주소
+LETTER_STORAGE_SERVICE_BASE_URL = 'http://localhost:8011' # letter_storage 서비스가 실행되는 주소
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -95,11 +89,11 @@ WSGI_APPLICATION = 'letter_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'a_letter_to_myself',
-        'USER': 'postgres',
-        'PASSWORD': 'sksk0877',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 

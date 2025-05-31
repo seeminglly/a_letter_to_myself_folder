@@ -1,4 +1,3 @@
-
 # Python 관련
 __pycache__/
 *.py[cod]
@@ -12,6 +11,9 @@ env/
 # IDE 설정
 .vscode/
 .idea/
+*.iml
+*.ipr
+*.iws
 
 # 환경변수
 .env
@@ -21,38 +23,7 @@ env/
 # media 파일
 media/
 staticfiles/
-.vscode/
-.idea/
 
 # GCP 버킷 key
 gcs-key.json
 
-# Python 관련
-__pycache__/
-*.py[cod]
-*.sqlite3
-
-# 가상환경
-venv/
-env/
-
-# IDE 설정
-.vscode/
-.idea/
-
-# 환경변수
-.env
-
-*.log
-
-# Django static files (선택)
-staticfiles/
-
-# media 파일
-media/
-staticfiles/
-.vscode/
-.idea/
-
-**/__pycache__/
-*.pyc
