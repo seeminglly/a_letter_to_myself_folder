@@ -3,6 +3,8 @@
 import os
 import sys
 
+# ✅ 루트 경로를 파이썬 경로에 추가
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/..")
 
 def main():
     """Run administrative tasks."""

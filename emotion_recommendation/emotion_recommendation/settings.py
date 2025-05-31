@@ -16,7 +16,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-# 애플리케이션 정의
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -30,6 +29,8 @@ INSTALLED_APPS = [
 
     # 로컬 앱
     'recommendation.emotion_based',
+    'emotion_recommendation.recommendation.feedback',
+    'emotion_recommendation.recommendation.emotion_based',
 ]
 
 MIDDLEWARE = [
