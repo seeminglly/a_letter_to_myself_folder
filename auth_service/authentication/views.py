@@ -23,9 +23,9 @@ from .forms import SignupForm, LoginForm
 from django.shortcuts import render
 from collections import Counter
 #마이크로서비스
-#from letters.models import Letters  
+from letters.models import Letters
 #모놀리식일때
-from letters_service.letters.models import Letter
+#from letters_service.letters.models import Letter
 import os
 from dotenv import load_dotenv
 from django.utils.timezone import now
@@ -34,9 +34,9 @@ from .jwt_utils import *
 from .services import create_user_in_user_service
 from .serializers import *
 from .models import User
-#from emotions.utils import analyze_emotion_for_letter -> 서비스 따로 돌릴 때 경로
+from emotions.utils import analyze_emotion_for_letter -> 서비스 따로 돌릴 때 경로
 #모놀리식으로 실행시킬 때 경로
-from emotion_analysis.emotions.utils import analyze_emotion_for_letter
+#from emotion_analysis.emotions.utils import analyze_emotion_for_letter
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 import requests
@@ -44,10 +44,7 @@ import requests
 # 임시 메모리 저장소 (프로덕션에서는 Redis 등 사용)
 REFRESH_TOKEN_STORE = {}
 
-
-
 #클라이언트 API
-
 class SignupView(View):
     def get(self, request):
         form = SignupForm()
