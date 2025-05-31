@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authentication',
-    'letters_service.letters',
+    'letters',
     "routine_service.routine_service",
     'routine_service.routine',
     'emotion_analysis.emotions',  # 감정 분석 앱
@@ -106,11 +106,11 @@ WSGI_APPLICATION = 'letter_project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'a_letter_to_myself',
-        'USER': 'postgres',
-        'PASSWORD': 'sksk0877',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
