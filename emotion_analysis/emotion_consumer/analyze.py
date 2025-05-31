@@ -13,7 +13,8 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 def send_to_store_service(emotion_result: dict):
     try:
         response = requests.post(
-            "http://<emotion-store-host>:8000/api/emotion-results/",  # 실제 주소로 변경
+            #"http://<emotion-store-host>:8000/api/emotion-results/",  # 실제 주소로 변경
+            "http://localhost:8009/api/emotion-results/"  # 개발 환경 포트 기준
             json=emotion_result,
             headers={"Content-Type": "application/json"}
         )
@@ -21,7 +22,6 @@ def send_to_store_service(emotion_result: dict):
         print("✅ 감정 결과 저장 성공:", response.json())
     except requests.RequestException as e:
         print("❌ 감정 결과 저장 실패:", str(e))
-
 
 def analyze_letter(letter):
     """
