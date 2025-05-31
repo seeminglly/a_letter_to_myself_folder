@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 import sys
-
 from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,6 +26,7 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG') == 'True'
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+RABBITMQ_HOST = "localhost" # 혹은 도커 호스트이름
 
 
 # Quick-start development settings - unsuitable for production
@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'accounts',
-    'letters_service.letters',
+    'letters',
     # 'routines',
     # 'recommendations',
     # 'emotions',
@@ -55,8 +55,6 @@ INSTALLED_APPS = [
     # 'commons',
 ]
 
-
-LETTER_STORAGE_SERVICE_BASE_URL = 'http://localhost:8001' # letter_storage 서비스가 실행되는 주소
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -73,7 +71,7 @@ ROOT_URLCONF = 'letter_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'letters_service' / 'letters' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -97,12 +95,20 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'a_letter_to_myself',
         'USER': 'postgres',
-        'PASSWORD': 'sksk0877',
+        'PASSWORD': '0000',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
 
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_PORT = int(os.getenv('RABBITMQ_PORT', '5672')) # 포트는 정수형으로 변환
+RABBITMQ_VHOST = os.getenv('RABBITMQ_VHOST', '/')
+RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
+
+USER_SERVICE_URL = os.getenv('USER_SERVICE_URL', "http://localhost:8001")
+LETTER_STORAGE_SERVICE_BASE_URL =  os.getenv('LETTER_STORAGE_SERVICE_BASE_URL', "http://localhost:8001")
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

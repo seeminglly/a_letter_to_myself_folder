@@ -86,4 +86,4 @@ class Letter(models.Model):
         return f"{self.title} - {self.category}"
     
     class Meta:
-        app_label = 'letters_service.letters'
+        app_label = 'letters'
