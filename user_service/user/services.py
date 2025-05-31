@@ -1,7 +1,6 @@
 import requests
-from django.conf import settings
 
-AUTH_SERVICE_URL = "http://localhost:8001/authentication"
+AUTH_SERVICE_URL = "http://localhost:8001/auth"
 
 def verify_access_token(token):
     try:

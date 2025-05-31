@@ -1,17 +1,23 @@
 import requests
-from django.conf import settings
 
-USER_SERVICE_URL = "http://localhost:8000/user"
+USER_SERVICE_URL = "http://localhost:8002/user" # 개발환경 기준
 
-def create_user_in_user_service(username, email):
-    response = requests.post(f"{USER_SERVICE_URL}/internal/users/", json={
+def create_user_in_user_service(user_id, username, email):
+    payload = {
+        "user_id": user_id,
         "username": username,
         "email": email,
-    })
-    print("User service response:", response.status_code, response.text)
-    if response.status_code != 201:
-        raise Exception("Failed to create user in user service")
-    return response.json()["user_id"]
-
-def get_user_by_email(email):
-    raise NotImplementedError
+    }
+    try:
+        response = requests.post(f'{USER_SERVICE_URL}/internal/users/', json=payload)
+        if response.status_code == 201:
+            return response.json()  # 예: {"user_id": 123}
+        else:
+            # 실패시 상세 메시지 포함해서 예외 발생
+            try:
+                detail = response.json().get("detail", response.text)
+            except Exception:
+                detail = response.text
+            raise Exception(f"User service error: {detail}")
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"User service connection failed: {str(e)}")
