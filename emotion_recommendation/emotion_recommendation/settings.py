@@ -23,12 +23,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'recommendation.feedback',
+    # 'recommendation.feedback',
     # 서드파티
     'rest_framework',
 
     # 로컬 앱
-    'recommendation.emotion_based',
+    # 'recommendation.emotion_based',
     'emotion_recommendation.recommendation.feedback',
     'emotion_recommendation.recommendation.emotion_based',
 ]
