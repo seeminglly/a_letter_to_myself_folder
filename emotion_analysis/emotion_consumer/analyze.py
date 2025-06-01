@@ -14,7 +14,7 @@ def send_to_store_service(emotion_result: dict):
     try:
         response = requests.post(
             #"http://<emotion-store-host>:8000/api/emotion-results/",  # 실제 주소로 변경
-            "http://localhost:8009/api/emotion-results/"  # 개발 환경 포트 기준
+            "http://localhost:8009/api/emotion-results/",  # 개발 환경 포트 기준
             json=emotion_result,
             headers={"Content-Type": "application/json"}
         )
