@@ -136,7 +136,7 @@ def letter_list(request):
     fake_user = User.objects.first()
     if not fake_user:
         return JsonResponse({"error": "테스트용 유저가 없습니다."})
-    letters = Letter.objects.filter(user=fake_user)   # 원래는 (user=request.user) 
+    letters = Letters.objects.filter(user=fake_user)   # 원래는 (user=request.user) 
     print(f"📄 편지 목록: '{fake_user.username}' 유저의 편지 {letters.count()}개 조회.")
     #####
 
@@ -162,7 +162,7 @@ def letter_list(request):
 def letter_json(request, letter_id):
     print(f"🔍 편지 상세 API: 편지 ID {letter_id} 조회 시도...")
     # letter = get_object_or_404(Letters, id=letter_id, user=request.user) # 로그인 기능 복원 시
-    letter = get_object_or_404(Letter, id=letter_id)
+    letter = get_object_or_404(Letters, id=letter_id)
 
     signed_url_from_api = None
     if letter.image_url: # image_url에 GCS 내의 blob_name이 저장되어 있다고 가정
@@ -192,7 +192,7 @@ def delete_letter_api_internal(request, letter_id):
             # 개발용 가짜 유저 지정
         fake_user = User.objects.first()
         # letter = get_object_or_404(Letters, id=letter_id, user=request.user)
-        letter = get_object_or_404(Letter, id=letter_id) # 테스트용 유저 정보 뺀 레터
+        letter = get_object_or_404(Letters, id=letter_id) # 테스트용 유저 정보 뺀 레터
         image_blob_name_to_delete = letter.image_url # DB에서 편지 삭제 전에 blob 이름 저장
 
         letter.delete() # DB에서 편지 레코드 삭제
