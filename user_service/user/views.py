@@ -2,65 +2,48 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.shortcuts import redirect, render
-
-from a_letter_to_myself_folder.auth_service.authentication.models import User
 from .models import UserProfile
 from .serializers import *
 from .services import verify_access_token
 
-#클라이언트 API
 
 class UserProfileUpdateView(APIView):
     def get(self, request):
         token = request.COOKIES.get("access")
         if not token:
-            return redirect('authentication:login')
+            return Response({"detail": "Authentication required."}, status=401)
 
         try:
             user_id = verify_access_token(token)
-            user = User.objects.get(id=user_id)
             profile = UserProfile.objects.get(user_id=user_id)
-            context = {
-                'user': user,
-                'profile': profile,
-            }
-            return render(request, 'profiles/update_profile.html', context)
+            serializer = UserProfileSerializer(profile)
+            return Response(serializer.data)
         except Exception as e:
-            print(f"[ERROR] {e}")
-            return redirect('authentication:login')
+            return Response({"detail": str(e)}, status=400)
 
-    def post(self, request):
+    def patch(self, request):
         token = request.COOKIES.get("access")
         if not token:
-            return redirect('authentication:login')
+            return Response({"detail": "Authentication required."}, status=401)
 
         try:
             user_id = verify_access_token(token)
         except Exception as e:
-            print(f"[ERROR] {e}")
-            return redirect('authentication:login')
+            return Response({"detail": str(e)}, status=401)
 
         try:
             profile = UserProfile.objects.get(user_id=user_id)
         except UserProfile.DoesNotExist:
-            return redirect('authentication:login')
+            return Response({"detail": "Profile not found."}, status=404)
 
-        data = request.POST.copy()
-        data.update(request.FILES)
-
-        serializer = UserProfileUpdateSerializer(profile, data=data, partial=True)
+        serializer = UserProfileUpdateSerializer(profile, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
-            return redirect('authentication:mypage')
+            return Response({"detail": "Profile updated successfully."})
         else:
-            return render(request, 'profiles/update_profile.html', {
-                'profile': profile,
-                'errors': serializer.errors,
-            })
+            return Response(serializer.errors, status=400)
 
-# 내부 서비스 API
 
 class UserProfileGetView(APIView):
     def get(self, request):
@@ -81,5 +64,5 @@ class UserCreateInternalView(APIView):
     def post(self, request):
         serializer = UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        return Response({"user_id": user.id}, status=201)
+        profile = serializer.save()
+        return Response({"user_id": profile.user_id}, status=201)
