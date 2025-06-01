@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from .models import Letter
+from .models import Letters
 from .forms import LetterForm
 from django.utils.timezone import now  # 현재 날짜 가져오기
 from django.core.paginator import Paginator
@@ -32,9 +32,8 @@ from django.contrib.auth import get_user_model
 def some_view(request):
     User = get_user_model()
 
-    fake_user = User.objects.first()
-    letters = Letter.objects.filter(user=fake_user)
-#
+fake_user = User.objects.first()
+letters = Letters.objects.filter(user=fake_user)
 
 def home(request):
     # 이 뷰는 'myapp/index.html'을 렌더링하며, letters 서비스의 핵심 HTML 분리와는 별개일 수 있습니다.

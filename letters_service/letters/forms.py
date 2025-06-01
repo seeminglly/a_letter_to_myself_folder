@@ -1,6 +1,6 @@
 from django import forms
 #마이크로서비스
-from letters.models import Letter 
+from letters.models import Letters
 #모놀리식일때
 # from letters_service.letters.models import Letter
 
@@ -10,7 +10,7 @@ class LetterForm(forms.ModelForm):
     image = forms.ImageField(required=False)
     
     class Meta:
-        model = Letter
+        model = Letters
         fields = ['title','content', 'open_date']  # 사용자 입력 필드
 
         widgets = {

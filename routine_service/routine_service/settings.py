@@ -1,7 +1,11 @@
 from pathlib import Path
+from dotenv import load_dotenv
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# .env 파일 로드
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = 'routine-secret-key'
 DEBUG = True
@@ -49,11 +53,11 @@ WSGI_APPLICATION = 'routine_service.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'routine_db',
-        'USER': 'postgres',
-        'PASSWORD': 'sksk0877',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 

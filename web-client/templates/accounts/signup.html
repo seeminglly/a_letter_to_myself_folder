@@ -12,7 +12,7 @@
     <!-- FullCalendar CSS -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
     <title>나에게 쓰는 편지</title> 
-    <link rel="stylesheet" href="{% static 'css/accounts/signup.css' %}">
+    <link rel="stylesheet" href="{% static 'css/authentication/signup.css' %}">
     <!-- <link rel="stylesheet" href="{% static 'css/style.css' %}?v={{ time }}"> -->
     <style>
         body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; }
@@ -48,7 +48,7 @@
    
     <div class="formContainer">
         <div class="signup">
-            <form method="post" action="{% url 'accounts:signup' %}">
+            <form method="post" action="{% url 'authentication:signup' %}">
                 {% csrf_token %}
                 <div class="logo">
                     <img src="{% static 'images/stamp.png' %}" alt="왁스실링 UI" width="70px">
