@@ -20,8 +20,6 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 
-
-
 app_name = "letters" 
 urlpatterns = [
     path('write/', views.write_letter, name="writing"), # letters/write

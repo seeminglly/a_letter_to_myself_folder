@@ -1,20 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-#from emotions.utils import analyze_emotion_for_letter -> 서비스 따로 돌릴 때 경로
-#from routines.models import LetterRoutine, SpecialDateRoutine 
-#from emotions.utils import analyze_emotion_for_letter
 from .models import Letters
 from .forms import LetterForm
 from django.utils.timezone import now  # 현재 날짜 가져오기
-from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse # 토큰 인증 사용
 from datetime import datetime, timedelta
 import openai
 import os
 from django.urls import reverse # 내부 API 호출 URL 생성
 from django.conf import settings
+from django.contrib.auth.models import User
+# 스토리지, 토큰, 이모션 파일들 임포트
+from .storage_client import upload_image_to_storage, get_signed_url_from_storage, delete_image_from_storage
+from .auth_client import get_user_id_from_token # 위에서 만든 함수 임포트
+from .message_producers import publish_emotion_analysis_request
 
 import requests # 외부 API 호출용
 
@@ -24,9 +26,11 @@ import requests # 외부 API 호출용
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # 개발용 가짜 유저 주입
+
 from django.contrib.auth import get_user_model
 
-User = get_user_model()
+def some_view(request):
+    User = get_user_model()
 
 fake_user = User.objects.first()
 letters = Letters.objects.filter(user=fake_user)
@@ -40,6 +44,24 @@ def home(request):
 # 1️⃣ 편지 작성 뷰
 # @login_required(login_url='/auth/login/')  # 👈 직접 로그인 URL 지정 (auth 마이크로서비스)
 def write_letter(request):
+    #  # 1. 요청 헤더에서 Access Token 추출
+    # auth_header = request.headers.get('Authorization') # "Authorization: Bearer <token>" 형식
+    # access_token = None
+
+    # if auth_header and auth_header.startswith('Bearer '):
+    #     access_token = auth_header.split(' ')[1]
+        
+    # if not access_token:
+    #     print("🔑 편지 뷰: 요청에 Bearer 토큰이 없습니다.")
+    #     return JsonResponse({'error': '인증 토큰이 헤더에 Bearer 타입으로 제공되어야 합니다.'}, status=401)
+
+    # # 2. 추출한 토큰으로 user_id 가져오기
+    # user_id = get_user_id_from_token(access_token)
+
+    # if user_id is None:
+    #     print("🚫 편지 뷰: 유효한 user_id를 얻지 못했습니다. 인증 실패 처리.")
+    #     return JsonResponse({'error': '인증에 실패했거나 유효하지 않은 토큰입니다.'}, status=401)
+        
     # 개발용 가짜 유저 지정
     fake_user = User.objects.first()
     if not fake_user:
@@ -51,49 +73,58 @@ def write_letter(request):
             letter = form.save(commit=False)  # ✅ 데이터 저장 전에 추가 설정
             letter.user = fake_user # 원래는 request.user  # 🔥 작성자를 현재 로그인한 사용자로 설정
             letter.category = 'future' # 기본적으로 미래 카테고리로 분류
-
-            gcs_blob_name_for_letter = None # API 응답으로 받을 GCS 파일 경로(blob_name)
-
-
+            
+            gcs_blob_name_for_letter = None
             if request.FILES.get('image'):
+                print("🖼️ 편지 작성: 이미지 파일 감지됨. 업로드 시도...")
                 file_to_upload = request.FILES['image']
+                gcs_blob_name_for_letter = upload_image_to_storage(file_to_upload) # storage_service_client.py의 함수
+
+                if gcs_blob_name_for_letter:
+                    letter.image_url = gcs_blob_name_for_letter
+                    print(f"🖼️✅ 편지 작성: 이미지 업로드 성공. Blob Name: {gcs_blob_name_for_letter}")
+                else:
+                    # 이미지 업로드 실패 시 로깅 (편지는 이미지 없이 저장됨)
+                    print(f"🖼️❌ 편지 작성: 이미지 업로드 실패. 이미지는 저장되지 않습니다.")
+                    letter.image_url = None # 또는 빈 문자열로 명시적 설정
+
+            # 모든 정보가 준비된 후, DB에 최종적으로 한 번만 저장
+            try:
+                letter.save()
+                print(f"💾 편지 작성: 편지 저장 완료! (ID: {letter.id}, User: {letter.user.id})")
+
+                # RabbitMQ로 감정 분석 요청 발행 (user_id 포함)
+                # letter.id가 있어야 하고, letter.user(또는 letter.user_id)가 있어야 하고, content가 있어야 함
+                if letter.id and letter.user and letter.user.id and letter.content:
+                    print(f"🐰 편지 작성: RabbitMQ로 감정 분석 요청 발행 시도... (편지 ID: {letter.id}, 유저 ID: {letter.user.id})")
+                    publish_success = publish_emotion_analysis_request(
+                        letter_id=letter.id,
+                        user_id=letter.user.id,
+                        content=letter.content
+                    )
+                    if not publish_success:
+                        print(f"⚠️ 편지 작성: RabbitMQ 메시지 발행 실패! (편지 ID: {letter.id})")
+                else:
+                    missing_parts = []
+                    if not letter.id: missing_parts.append("ID")
+                    if not letter.user or not letter.user.id: missing_parts.append("유저 ID")
+                    if not letter.content: missing_parts.append("내용")
+                    print(f"ℹ️ 편지 작성: RabbitMQ 메시지 발행 건너뜀 ({', '.join(missing_parts)} 누락). 편지 ID: {letter.id if letter.id else '미정의'}")
                 
-                # --- Storage API 호출: 이미지 업로드 ---
-                try:
-                    # settings.py에 정의된 LETTER_STORAGE_SERVICE_BASE_URL 사용
-                    storage_api_base_url = settings.LETTER_STORAGE_SERVICE_BASE_URL.rstrip('/')
-                    upload_api_path = "/api/images/" # storage 서비스의 실제 업로드 API 경로
-                    full_upload_api_url = f"{storage_api_base_url}{upload_api_path}"
-                    
-                    files_payload = {'file': (file_to_upload.name, file_to_upload, file_to_upload.content_type)}
-                    data_payload = {'id': str(letter.id)} # letter.id가 존재할 때
-                    
-                    response = requests.post(full_upload_api_url, files=files_payload) # data=data_payload 추가 가능
-                    response.raise_for_status() 
-                    
-                    upload_response_data = response.json()
+                return redirect('letters:letter_list')
 
-                    if upload_response_data.get('blob_name'):
-                        gcs_blob_name_for_letter = upload_response_data.get('blob_name')
-                        print(f"Storage Service API: 이미지 업로드 성공, blob_name: {gcs_blob_name_for_letter}")
-                    else:
-                        print(f"Storage Service API: 이미지 업로드 실패 - {upload_response_data.get('message')}")
-                except requests.exceptions.RequestException as e:
-                    print(f"Storage Service API: 이미지 업로드 호출 오류 - {e}")
-                except Exception as e: # 더 넓은 범위의 예외 처리
-                    print(f"Storage Service API: 이미지 업로드 중 기타 오류 - {e}")
+            except Exception as e: # letter.save() 또는 그 이후 과정에서 발생할 수 있는 예외 처리
+                print(f"❌ 편지 작성: 편지 저장 또는 후속 처리 중 오류 발생! - {e}")
+                # 사용자에게 오류 메시지를 보여주거나, 폼을 다시 보여줄 수 있음
+                # form.add_error(None, "편지 저장 중 문제가 발생했습니다. 다시 시도해주세요.") # 폼 에러 추가
+                return render(request, 'letters/writing.html', {'form': form, 'error_message': '편지 저장 중 오류가 발생했습니다.'})
 
-            if gcs_blob_name_for_letter:
-                letter.image_url = gcs_blob_name_for_letter # 모델에는 blob_name 또는 전체 GCS URL 저장 (API 응답에 따라)
-
-            letter.save()
-           # analyze_emotion_for_letter(letter) # api 호출로 수정하기
-
-           ##### 기존 렌더링 코드 ######
-            return redirect('letters:letter_list')  # 편지 목록 페이지로 이동
-    else:
+        else: # form.is_valid()가 False일 때
+            print(f"📝❌ 편지 작성: 폼 유효성 검사 실패! 오류: {form.errors.as_json()}")
+            return render(request, 'letters/writing.html', {'form': form}) # 오류 있는 폼 다시 보여주기
+    else: # GET 요청일 때
         form = LetterForm()
-        
+    
     return render(request, 'letters/writing.html', {'form': form})
 
 
@@ -105,8 +136,9 @@ def letter_list(request):
     fake_user = User.objects.first()
     if not fake_user:
         return JsonResponse({"error": "테스트용 유저가 없습니다."})
-    letters = Letter.objects.filter(user=fake_user)   # 원래는 (user=request.user) 
-    #
+    letters = Letters.objects.filter(user=fake_user)   # 원래는 (user=request.user) 
+    print(f"📄 편지 목록: '{fake_user.username}' 유저의 편지 {letters.count()}개 조회.")
+    #####
 
     today = datetime.now().date()
     
@@ -128,41 +160,26 @@ def letter_list(request):
 # 개별 편지 상세보기 api
 # @login_required(login_url='/auth/login/')
 def letter_json(request, letter_id):
+    print(f"🔍 편지 상세 API: 편지 ID {letter_id} 조회 시도...")
     # letter = get_object_or_404(Letters, id=letter_id, user=request.user) # 로그인 기능 복원 시
     letter = get_object_or_404(Letters, id=letter_id)
 
     signed_url_from_api = None
     if letter.image_url: # image_url에 GCS 내의 blob_name이 저장되어 있다고 가정
-        blob_name = letter.image_url 
-        # --- Storage API 호출: 서명된 URL 생성 ---
-        try:
-            storage_api_base_url = settings.LETTER_STORAGE_SERVICE_BASE_URL.rstrip('/')
-            # storage 서비스의 실제 get-image-url API 경로 사용
-            get_url_api_path = f"/api/images/{blob_name}/" # 경로 마지막 / 유의
-            full_get_url_api_url = f"{storage_api_base_url}{get_url_api_path}"
-            
-            response = requests.get(full_get_url_api_url)
-            response.raise_for_status()
-            
-            url_response_data = response.json()
-
-            if url_response_data.get('signed_url'):
-                signed_url_from_api = url_response_data.get('signed_url')
-                print(f"Storage Service API: Signed URL '{signed_url_from_api}' for blob '{blob_name}'")
-            else:
-                print(f"Storage Service API: Signed URL 생성 실패 - {url_response_data.get('message')}")
-        except requests.exceptions.RequestException as e:
-            print(f"Storage Service API: Signed URL 호출 오류 - {e}")
-        except Exception as e:
-            print(f"Storage Service API: Signed URL 생성 중 기타 오류 - {e}")
+        print(f"🖼️ 편지 상세 API: 이미지 blob '{letter.image_url}'에 대한 서명된 URL 요청 시도...")
+        signed_url_from_api = get_signed_url_from_storage(letter.image_url)
+    else: {
+        print("ℹ️ 편지 상세 API: 편지에 이미지가 없습니다.")
+    }    
 
     data = {
         'id':letter.id,
         'title': letter.title,
         'content': letter.content,
         'letter_date': letter.open_date.strftime("%Y-%m-%d"), #개봉 가능 날짜
-        'image_url': signed_url_from_api # API로부터 받은 서명된 URL (이전 코드에 signed_url로 되어 있던 변수명 수정)
+        'image_url': signed_url_from_api # API로부터 받은 서명된 URL
     }
+    print(f"✅ 편지 상세 API: 편지 ID {letter.id} 데이터 준비 완료.")
     return JsonResponse(data)
 
 
@@ -179,45 +196,23 @@ def delete_letter_api_internal(request, letter_id):
         image_blob_name_to_delete = letter.image_url # DB에서 편지 삭제 전에 blob 이름 저장
 
         letter.delete() # DB에서 편지 레코드 삭제
+        print(f"🗑️✅ 편지 삭제 API: DB에서 편지 ID {letter_id} 삭제 완료.")
 
         if image_blob_name_to_delete:
-            try:
-                storage_api_base_url = settings.LETTER_STORAGE_SERVICE_BASE_URL.rstrip('/')
-                # storage 서비스의 실제 이미지 삭제 API 경로
-                # 이전에 storage 서비스의 image_detail_view가 /api/images/<blob_name>/ DELETE를 처리한다고 가정
-                delete_api_path = f"/api/images/{image_blob_name_to_delete}/" 
-                full_delete_api_url = f"{storage_api_base_url}{delete_api_path}"
-
-                print(f"Calling Storage Service API (Delete Image): DELETE {full_delete_api_url}")
-                response = requests.delete(full_delete_api_url)
-
-                if response.status_code == 204: # 성공 (No Content)
-                    print(f"Storage Service API: 이미지 '{image_blob_name_to_delete}' 삭제 성공 (204 No Content).")
-                elif response.ok: # 다른 2xx 성공 코드 (예: 200 OK 와 함께 메시지)
-                    try:
-                        delete_response_data = response.json() # 이 경우에만 JSON 파싱 시도
-                        print(f"Storage Service API: 이미지 '{image_blob_name_to_delete}' 삭제 응답 (상태코드 {response.status_code}): {delete_response_data}")
-                    except ValueError: # requests.exceptions.JSONDecodeError의 부모 (응답 본문이 JSON이 아닐 때)
-                        print(f"Storage Service API: 이미지 '{image_blob_name_to_delete}' 삭제 성공 (상태코드: {response.status_code}), 응답 본문 JSON 아님: {response.text}")
-                else: # 2xx가 아닌 경우 (오류 상태 코드)
-                    # 여기서 HTTPError 예외를 발생시켜 아래 except 블록에서 처리
-                    response.raise_for_status() 
-            
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code == 404:
-                    print(f"Info (delete_letter_api_internal): Image '{image_blob_name_to_delete}' not found in GCS or Storage Service (HTTP 404).")
-                else:
-                    print(f"Error calling Storage API (Delete Image HTTPError): {e.response.status_code} {e.response.text if e.response else 'No response text'}")
-            except requests.exceptions.RequestException as e: # 네트워크 등 기타 요청 오류
-                print(f"Error calling Storage API (Delete Image RequestException): {e}")
-            except ValueError: # JSONDecodeError (위에서 처리했지만, 만약을 위해)
-                 print(f"Storage Service API: 이미지 삭제 응답이 성공적이었으나(상태코드: {response.status_code}), JSON 형식이 아님: {response.text}")
-            except Exception as e:
-                print(f"An unexpected error occurred during image delete API call: {e}")
+            print(f"🖼️🗑️ 편지 삭제 API: 스토리지에서 이미지 '{image_blob_name_to_delete}' 삭제 시도...")
+            delete_success = delete_image_from_storage(image_blob_name_to_delete)
+            if delete_success:
+                print(f"🖼️🗑️✅ 편지 삭제 API: 스토리지에서 이미지 '{image_blob_name_to_delete}' 삭제 성공.")
+            else:
+                print(f"🖼️🗑️❌ 편지 삭제 API: 스토리지에서 이미지 '{image_blob_name_to_delete}' 삭제 실패 또는 이미 없음.")
+        else:
+            print("ℹ️ 편지 삭제 API: 편지에 삭제할 이미지가 없습니다.")
             
         return JsonResponse({'status': 'success', 'message': '편지가 성공적으로 삭제되었습니다.'}, status=200)
-    except Letters.DoesNotExist:
+    
+    except Letter.DoesNotExist: # Model명 수정: Letters -> Letter
+        print(f"❌ 편지 삭제 API: 편지 ID {letter_id}를 찾을 수 없습니다 (404).")
         return JsonResponse({'status': 'error', 'message': '해당 편지를 찾을 수 없습니다.'}, status=404)
     except Exception as e:
-        print(f"Error deleting letter (main try-except): {e}")
+        print(f"❌ 편지 삭제 API: 편지 ID {letter_id} 삭제 중 예상치 못한 오류 발생! {e}")
         return JsonResponse({'status': 'error', 'message': '편지 삭제 중 오류가 발생했습니다.'}, status=500)
